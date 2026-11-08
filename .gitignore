@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+coverage/
+.turbo/
+.vercel/
+.env
+.env.*
+!env.example
+supabase/.temp/
+supabase/.branches/
+evals/datasets/menus/images/*
+!evals/datasets/menus/images/.gitkeep
+evals/reports/*.html
+.claude/settings.local.json
+*.log
+.DS_Store

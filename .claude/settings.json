@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(node scripts/*)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git log *)",
+      "Bash(npx promptfoo *)",
+      "Bash(npx @modelcontextprotocol/inspector *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(pnpm supabase db push *)",
+      "Bash(vercel *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(cat .env*)",
+      "Read(./node_modules/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./**/.next/**)",
+      "Read(./**/dist/**)",
+      "Read(./pnpm-lock.yaml)",
+      "Read(./evals/datasets/menus/images/**)",
+      "Read(./supabase/.temp/**)",
+      "Bash(rm -rf *)"
+    ]
+  },
+  "enabledMcpjsonServers": ["context7", "supabase"],
+  "env": {
+    "BASH_MAX_OUTPUT_LENGTH": "12000",
+    "MAX_MCP_OUTPUT_TOKENS": "10000"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/session-start.mjs\"" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/post-edit.mjs\"", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}
