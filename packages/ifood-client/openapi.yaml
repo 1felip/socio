@@ -1,0 +1,595 @@
+openapi: 3.1.0
+info:
+  title: iFood Merchant API (subconjunto usado pelo Sócio)
+  version: 2026-11-09
+  description: |
+    Espelho parcial da API de parceiros do iFood, só com o que o projeto usa.
+    Fonte e grau de confirmação: docs/research/ifood-api.md.
+    `x-confirmed: false` marca o que não foi confirmado na documentação oficial
+    (Review e Financial: páginas fora do ar na pesquisa). Os schemas Zod em
+    src/schemas.ts usam os mesmos nomes e campos obrigatórios (teste de contrato).
+servers:
+  - url: https://merchant-api.ifood.com.br
+security:
+  - bearer: []
+
+paths:
+  /authentication/v1.0/oauth/token:
+    post:
+      operationId: getToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grantType, clientId, clientSecret]
+              properties:
+                grantType:
+                  { type: string, enum: [client_credentials, authorization_code, refresh_token] }
+                clientId: { type: string }
+                clientSecret: { type: string }
+                authorizationCode: { type: string }
+                authorizationCodeVerifier: { type: string }
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: Token (validade em expiresIn, segundos)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenResponse" }
+
+  /merchant/v1.0/merchants:
+    get:
+      operationId: listMerchants
+      x-confirmed: false
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: size, in: query, schema: { type: integer, default: 100 } }
+      responses:
+        "200":
+          description: Lojas da credencial
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/MerchantSummary" } }
+
+  /merchant/v1.0/merchants/{merchantId}/status:
+    get:
+      operationId: getMerchantStatus
+      parameters: [{ $ref: "#/components/parameters/merchantId" }]
+      responses:
+        "200":
+          description: Status por operação (heartbeat a cada 30s)
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/MerchantStatus" } }
+
+  /catalog/v2.0/merchants/{merchantId}/catalogs:
+    get:
+      operationId: listCatalogs
+      x-confirmed: false
+      parameters: [{ $ref: "#/components/parameters/merchantId" }]
+      responses:
+        "200":
+          description: Catálogos da loja
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Catalog" } }
+
+  /catalog/v2.0/merchants/{merchantId}/catalogs/{catalogId}/categories:
+    get:
+      operationId: listCatalog
+      x-confirmed: false
+      parameters:
+        - { $ref: "#/components/parameters/merchantId" }
+        - { name: catalogId, in: path, required: true, schema: { type: string } }
+        - { name: includeItems, in: query, schema: { type: boolean, default: true } }
+      responses:
+        "200":
+          description: Categorias com itens
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Category" } }
+
+  /catalog/v2.0/merchants/{merchantId}/items:
+    put:
+      operationId: upsertItems
+      description: Escrita. No Sócio, só com approval_id válido.
+      parameters: [{ $ref: "#/components/parameters/merchantId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ItemUpsert" }
+      responses:
+        "200": { description: Item criado ou atualizado }
+        "422": { description: Item inválido (ex. PIZZA sem SIZE/CRUST/EDGE/TOPPING) }
+
+  /catalog/v2.0/merchants/{merchantId}/items/status:
+    patch:
+      operationId: patchItemStatus
+      parameters: [{ $ref: "#/components/parameters/merchantId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ItemStatusPatch" }
+      responses:
+        "200": { description: OK }
+
+  /catalog/v2.0/merchants/{merchantId}/items/price:
+    patch:
+      operationId: patchItemPrice
+      x-confirmed: false
+      parameters: [{ $ref: "#/components/parameters/merchantId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ItemPricePatch" }
+      responses:
+        "200": { description: OK }
+
+  /review/v2.0/merchants/{merchantId}/reviews:
+    get:
+      operationId: listReviews
+      x-confirmed: false
+      parameters:
+        - { $ref: "#/components/parameters/merchantId" }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, maximum: 100, default: 10 } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date } }
+        - { name: dateTo, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Página de avaliações
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewPage" }
+
+  /review/v2.0/merchants/{merchantId}/reviews/{reviewId}/answers:
+    post:
+      operationId: replyReview
+      x-confirmed: false
+      description: Escrita. No Sócio, só com approval_id válido.
+      parameters:
+        - { $ref: "#/components/parameters/merchantId" }
+        - { name: reviewId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewAnswerRequest" }
+      responses:
+        "201":
+          description: Resposta publicada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewAnswer" }
+
+  /order/v1.0/orders:polling:
+    get:
+      operationId: pollOrderEvents
+      description: Polling a cada 30s. Eventos voltam até serem confirmados (acknowledgment).
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 100 } }
+      responses:
+        "200":
+          description: Eventos pendentes
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/OrderEvent" } }
+        "204": { description: Sem eventos }
+
+  /order/v1.0/orders:acknowledgment:
+    post:
+      operationId: acknowledgeOrderEvents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AcknowledgmentRequest" }
+      responses:
+        "202": { description: Confirmado }
+
+  /order/v1.0/orders/{orderId}:
+    get:
+      operationId: getOrder
+      parameters:
+        - { name: orderId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Detalhe do pedido (food)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+
+  /financial/v2.1/merchants/{merchantId}/sales:
+    get:
+      operationId: listSales
+      x-confirmed: false
+      description: getFinancialSummary do adapter agrega estas vendas (não há endpoint de resumo confirmado).
+      parameters:
+        - { $ref: "#/components/parameters/merchantId" }
+        - {
+            name: beginSalesDate,
+            in: query,
+            required: true,
+            schema: { type: string, format: date },
+          }
+        - { name: endSalesDate, in: query, required: true, schema: { type: string, format: date } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Vendas conciliadas
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SalesPage" }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer }
+  parameters:
+    merchantId: { name: merchantId, in: path, required: true, schema: { type: string } }
+
+  schemas:
+    Status: { type: string, enum: [AVAILABLE, UNAVAILABLE] }
+    CatalogContext: { type: string, enum: [DEFAULT, WHITELABEL, INDOOR] }
+    EventCode: { type: string, enum: [PLC, CFM, RTP, DSP, CON, CAN] }
+
+    TokenResponse:
+      type: object
+      required: [accessToken, expiresIn]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer }
+
+    MerchantSummary:
+      type: object
+      x-confirmed: false
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        corporateName: { type: string }
+
+    MerchantStatus:
+      type: object
+      required: [operation, available, state]
+      properties:
+        operation: { type: string, examples: [DELIVERY, TAKEOUT, INDOOR] }
+        available: { type: boolean }
+        state: { type: string, enum: [OK, WARNING, CLOSED, ERROR] }
+        reopenable: { type: boolean }
+        validations:
+          type: array
+          items:
+            type: object
+            required: [code]
+            properties: { id: { type: string }, code: { type: string } }
+
+    Price:
+      type: object
+      required: [value]
+      properties:
+        value: { type: number, minimum: 0 }
+        originalValue: { type: number, minimum: 0 }
+
+    ContextModifier:
+      type: object
+      required: [catalogContext]
+      properties:
+        catalogContext: { $ref: "#/components/schemas/CatalogContext" }
+        status: { $ref: "#/components/schemas/Status" }
+        price: { $ref: "#/components/schemas/Price" }
+
+    Item:
+      type: object
+      required: [id, type, categoryId, status, price, productId]
+      properties:
+        id: { type: string }
+        type: { type: string, examples: [DEFAULT, PIZZA] }
+        categoryId: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+        price: { $ref: "#/components/schemas/Price" }
+        externalCode: { type: string }
+        index: { type: integer, minimum: 0 }
+        productId: { type: string }
+        contextModifiers: { type: array, items: { $ref: "#/components/schemas/ContextModifier" } }
+
+    ProductOptionGroupRef:
+      type: object
+      required: [id, min, max]
+      properties:
+        id: { type: string }
+        min: { type: integer }
+        max: { type: integer }
+
+    Product:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        externalCode: { type: string }
+        imagePath: { type: string }
+        serving: { type: string }
+        quantity: { type: integer }
+        optionGroups: { type: array, items: { $ref: "#/components/schemas/ProductOptionGroupRef" } }
+
+    OptionGroup:
+      type: object
+      required: [id, name, status, optionIds]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+        optionGroupType: { type: string, examples: [SIZE, CRUST, EDGE, TOPPING] }
+        optionIds: { type: array, items: { type: string } }
+
+    Option:
+      type: object
+      required: [id, status, productId, price]
+      properties:
+        id: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+        productId: { type: string }
+        price: { $ref: "#/components/schemas/Price" }
+        index: { type: integer }
+
+    ItemUpsert:
+      type: object
+      required: [item, products]
+      properties:
+        item: { $ref: "#/components/schemas/Item" }
+        products: { type: array, minItems: 1, items: { $ref: "#/components/schemas/Product" } }
+        optionGroups: { type: array, items: { $ref: "#/components/schemas/OptionGroup" } }
+        options: { type: array, items: { $ref: "#/components/schemas/Option" } }
+
+    Catalog:
+      type: object
+      x-confirmed: false
+      required: [catalogId, context, status]
+      properties:
+        catalogId: { type: string }
+        context: { type: array, items: { $ref: "#/components/schemas/CatalogContext" } }
+        status: { $ref: "#/components/schemas/Status" }
+        modifiedAt: { type: string, format: date-time }
+
+    CategoryItem:
+      type: object
+      x-confirmed: false
+      required: [id, productId, name, status, price]
+      properties:
+        id: { type: string }
+        productId: { type: string }
+        name: { type: string }
+        description: { type: string }
+        externalCode: { type: string }
+        imagePath: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+        index: { type: integer }
+        price: { $ref: "#/components/schemas/Price" }
+
+    Category:
+      type: object
+      x-confirmed: false
+      required: [id, name, status, items]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+        externalCode: { type: string }
+        index: { type: integer }
+        items: { type: array, items: { $ref: "#/components/schemas/CategoryItem" } }
+
+    ItemStatusPatch:
+      type: object
+      required: [itemId, status]
+      properties:
+        itemId: { type: string }
+        status: { $ref: "#/components/schemas/Status" }
+
+    ItemPricePatch:
+      type: object
+      x-confirmed: false
+      required: [itemId, price]
+      properties:
+        itemId: { type: string }
+        price: { $ref: "#/components/schemas/Price" }
+
+    OrderEvent:
+      type: object
+      required: [id, code, fullCode, orderId, merchantId, createdAt]
+      properties:
+        id: { type: string }
+        code: { $ref: "#/components/schemas/EventCode" }
+        fullCode: { type: string, examples: [PLACED, CONFIRMED, CONCLUDED, CANCELLED] }
+        orderId: { type: string }
+        merchantId: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    AcknowledgmentRequest:
+      type: object
+      required: [acknowledgedEventIds]
+      properties:
+        acknowledgedEventIds: { type: array, maxItems: 2000, items: { type: string } }
+
+    OrderItemOption:
+      type: object
+      required: [id, name, quantity, unitPrice, price]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        quantity: { type: integer }
+        unitPrice: { type: number }
+        price: { type: number }
+
+    OrderItem:
+      type: object
+      required: [index, id, uniqueId, name, quantity, unitPrice, price, optionsPrice, totalPrice]
+      properties:
+        index: { type: integer }
+        id: { type: string }
+        uniqueId: { type: string }
+        name: { type: string }
+        externalCode: { type: string }
+        quantity: { type: number }
+        unitPrice: { type: number }
+        price: { type: number }
+        optionsPrice: { type: number }
+        totalPrice: { type: number }
+        options: { type: array, items: { $ref: "#/components/schemas/OrderItemOption" } }
+
+    Order:
+      type: object
+      required:
+        [
+          id,
+          displayId,
+          orderType,
+          orderTiming,
+          salesChannel,
+          createdAt,
+          merchant,
+          customer,
+          items,
+          total,
+          payments,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        displayId: { type: string }
+        orderType: { type: string, enum: [DELIVERY, TAKEOUT, DINE_IN] }
+        orderTiming: { type: string, enum: [IMMEDIATE, SCHEDULED] }
+        salesChannel: { type: string }
+        category: { type: string }
+        createdAt: { type: string, format: date-time }
+        preparationStartDateTime: { type: string, format: date-time }
+        isTest: { type: boolean }
+        merchant:
+          type: object
+          required: [id, name]
+          properties: { id: { type: string }, name: { type: string } }
+        customer:
+          type: object
+          required: [id, name]
+          properties:
+            id: { type: string }
+            name: { type: string }
+            phone: { type: object, required: [number], properties: { number: { type: string } } }
+        items: { type: array, minItems: 1, items: { $ref: "#/components/schemas/OrderItem" } }
+        total:
+          type: object
+          required: [subTotal, deliveryFee, benefits, additionalFees, orderAmount]
+          properties:
+            subTotal: { type: number }
+            deliveryFee: { type: number }
+            benefits: { type: number }
+            additionalFees: { type: number }
+            orderAmount: { type: number }
+        payments:
+          type: object
+          required: [prepaid, pending, methods]
+          properties:
+            prepaid: { type: number }
+            pending: { type: number }
+            methods:
+              type: array
+              items:
+                type: object
+                required: [value, method, type]
+                properties:
+                  value: { type: number }
+                  method: { type: string }
+                  type: { type: string, enum: [ONLINE, OFFLINE] }
+        delivery:
+          type: object
+          required: [mode, deliveredBy, deliveryDateTime]
+          properties:
+            mode: { type: string }
+            deliveredBy: { type: string, enum: [IFOOD, MERCHANT] }
+            deliveryDateTime: { type: string, format: date-time }
+
+    Review:
+      type: object
+      x-confirmed: false
+      required: [id, score, createdAt, published, order]
+      properties:
+        id: { type: string }
+        score: { type: number, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        createdAt: { type: string, format: date-time }
+        published: { type: boolean }
+        moderated: { type: boolean }
+        discarded: { type: boolean }
+        order:
+          type: object
+          required: [id, shortId, createdAt]
+          properties:
+            id: { type: string }
+            shortId: { type: string }
+            createdAt: { type: string, format: date-time }
+        replies:
+          type: array
+          items:
+            type: object
+            required: [text, createdAt]
+            properties:
+              text: { type: string }
+              createdAt: { type: string, format: date-time }
+              from: { type: string }
+
+    ReviewPage:
+      type: object
+      x-confirmed: false
+      required: [page, size, total, pageCount, reviews]
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        total: { type: integer }
+        pageCount: { type: integer }
+        reviews: { type: array, items: { $ref: "#/components/schemas/Review" } }
+
+    ReviewAnswerRequest:
+      type: object
+      x-confirmed: false
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 300 }
+
+    ReviewAnswer:
+      type: object
+      x-confirmed: false
+      required: [reviewId, text, createdAt]
+      properties:
+        reviewId: { type: string }
+        text: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    Sale:
+      type: object
+      x-confirmed: false
+      required:
+        [orderId, orderDate, orderStatus, grossValue, commission, deliveryFee, benefits, netValue]
+      properties:
+        orderId: { type: string }
+        orderDate: { type: string, format: date-time }
+        orderStatus: { type: string, enum: [CONCLUDED, CANCELLED] }
+        grossValue: { type: number }
+        commission: { type: number }
+        deliveryFee: { type: number }
+        benefits: { type: number }
+        netValue: { type: number }
+
+    SalesPage:
+      type: object
+      x-confirmed: false
+      required: [page, size, total, sales]
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        total: { type: integer }
+        sales: { type: array, items: { $ref: "#/components/schemas/Sale" } }

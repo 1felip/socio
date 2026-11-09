@@ -1,8 +1,8 @@
 # Handoff
-Última tarefa: T01 Monorepo e ferramentas (done)
-O que mudou: package.json raiz, pnpm-workspace.yaml (allowBuilds p/ esbuild etc.), tsconfig.base.json, biome.json, vitest.config.ts;
-apps/web (Next.js 16 + Tailwind v4 + shadcn, /api/health); packages/{llm,agents,ifood-client,db,whatsapp,mcp-ifood} com src/index.ts + teste;
-.github/workflows/ci.yml. Hooks em scripts/hooks/*.mjs e scripts/roadmap.mjs reformatados pelo Biome.
-Atenção na próxima: `pnpm check` e `pnpm --filter web build` verdes. CLAUDE.md e README.md têm reformatação de markdown não commitada (fora do T01) — descartar ou commitar à parte.
-Biome ignora *.md, docs/ e .claude/. eval:quick é placeholder.
-Próxima tarefa sugerida: T04 Contrato iFood: pesquisa, mock e adapter (docs/tasks/T04-contrato-ifood.md). T02 depende de T00 (suas contas).
+Última tarefa: T04 Contrato iFood: pesquisa, mock e adapter (done)
+O que mudou: docs/research/ifood-api.md; packages/ifood-client/{openapi.yaml, src/schemas.ts, client.ts, mock.ts, memory-store.ts, fixtures.ts, real.ts, errors.ts, index.ts};
+.claude/skills/ifood-api/SKILL.md resumido. getIfoodClient() por IFOOD_MODE (mock padrão). Teste de contrato openapi × Zod.
+Atenção na próxima: mock usa store em memória (demoSeed); T03 deve implementar MockStore lendo do Supabase e passar em getIfoodClient({ store }).
+Review, Financial e listagens marcadas x-confirmed: false (páginas 404) — conferir manualmente antes do modo real. Polling: orders:polling vs events:polling em aberto.
+CLAUDE.md e README.md seguem com reformatação não commitada (fora das tarefas).
+Próxima tarefa sugerida: T00 Contas e chaves [HUMANO] (destrava T02 → T03).

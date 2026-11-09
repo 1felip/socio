@@ -10,7 +10,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T01 | 0 | Monorepo e ferramentas | — | CLAUDE | done |
 | T02 | 0 | Banco Supabase: schema, RLS e tipos | T00, T01 | CLAUDE | todo |
 | T03 | 0 | Dados sintéticos com padrões plantados | T02 | CLAUDE | todo |
-| T04 | 0 | Contrato iFood: pesquisa, mock e adapter | T01 | CLAUDE | todo |
+| T04 | 0 | Contrato iFood: pesquisa, mock e adapter | T01 | CLAUDE | done |
 | T05 | 1 | Camada LLM: modelos, custo e tracing | T02 | CLAUDE | todo |
 | T06 | 1 | Agente Cardápio: foto para rascunho | T05 | CLAUDE | todo |
 | T07 | 1 | Aprovações e publicação no catálogo | T04, T06 | CLAUDE | todo |

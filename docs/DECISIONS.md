@@ -8,3 +8,5 @@ Formato: `D<n> (T<id>) — decisão. Motivo.` Duas linhas no máximo.
 - D4 (T00) — iFood via interface IfoodClient com mock no mesmo contrato. Sem CNPJ não há loja de teste.
 - D5 (T00) — Supabase cloud de dev em vez de local com Docker. Menos atrito no Windows.
 - D6 (T00) — Biome em vez de ESLint + Prettier. Uma ferramenta rápida, boa para o hook pós-edição.
+- D5 (T04) — Mock do iFood sobre interface MockStore (memória agora, Supabase na T03); respostas validadas em Zod espelhando openapi.yaml.
+  Review/Financial não confirmados na doc oficial (x-confirmed: false); getFinancialSummary é agregação nossa sobre /sales.
