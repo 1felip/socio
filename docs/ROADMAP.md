@@ -7,7 +7,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | ID | Fase | Tarefa | Depende | Quem | Status |
 |---|---|---|---|---|---|
 | T00 | 0 | Contas e chaves | — | HUMANO | todo |
-| T01 | 0 | Monorepo e ferramentas | — | CLAUDE | todo |
+| T01 | 0 | Monorepo e ferramentas | — | CLAUDE | done |
 | T02 | 0 | Banco Supabase: schema, RLS e tipos | T00, T01 | CLAUDE | todo |
 | T03 | 0 | Dados sintéticos com padrões plantados | T02 | CLAUDE | todo |
 | T04 | 0 | Contrato iFood: pesquisa, mock e adapter | T01 | CLAUDE | todo |

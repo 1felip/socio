@@ -1,0 +1,29 @@
+{
+  "name": "socio",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "eval:quick": "node -e \"console.log('eval:quick: nenhuma suíte ainda (placeholder)')\"",
+    "db:types": "supabase gen types typescript --local > packages/db/src/database.types.ts",
+    "seed": "node -e \"console.log('seed: implementado na T03 (placeholder)')\""
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@types/node": "26.6.6",
+    "promptfoo": "0.125.1",
+    "supabase": "3.0.0",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}
