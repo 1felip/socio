@@ -23,3 +23,6 @@ Formato: `D<n> (T<id>) — decisão. Motivo.` Duas linhas no máximo.
   trigger torna payload/hash/loja/kind imutáveis. catalogId do payload ainda não é conferido com o catálogo da loja (fica para a T08, que lista as categorias reais).
 - D13 (T08) — Painel atrás da interface `Backend` (apps/web/lib/backend): `demo` (memória + mock iFood + rascunho fixo, sessão HMAC) e `supabase`; `SOCIO_BACKEND` escolhe, produção exige valor explícito.
   Autorização em lib/flows.ts (membro envia, só owner aprova/rejeita); aprovar no painel = approve + publish na mesma ação; categorias vêm do catálogo real e são revalidadas no servidor.
+- D14 (T12) — Orquestrador (`POST /api/agent`): roteador híbrido (regras com peso; modelo `fast` só sem sinal ou empate; erro → `conversa`). Loop de tools via `generateWithTools` em packages/llm
+  (AI SDK, `maxSteps`, teto de custo por loop, timeout); handlers só recebem tools de leitura/proposta. Memória curta em `conversations.state.messages` (últimas 12, sem tabela nova).
+  Avaliações, analista e campanhas respondem "chegando" até T14/T15/T22 trocarem o handler. HMAC do n8n assina `${timestamp}.${corpo}` (±5 min); painel força `channel=panel` e checa membro.

@@ -13,6 +13,7 @@ import {
   MenuDraft,
   MenuReadError,
   SupabaseApprovalStore,
+  SupabaseConversationStore,
   SupabaseRoiStore,
 } from '@socio/agents';
 import { createServerClient, createServiceClient, type DbClient } from '@socio/db';
@@ -91,6 +92,9 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
 
   return {
     mode: 'supabase',
+    get conversations() {
+      return new SupabaseConversationStore(admin());
+    },
     approvals,
     publisher,
 

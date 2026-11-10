@@ -7,6 +7,6 @@ description: Convenções dos workflows n8n (WhatsApp inbound, botões de aprova
 - Crie e edite pelo MCP do n8n (ligue com /mcp). Depois exporte o JSON para `n8n/<nome>.json` e commite.
 - Nunca commite credenciais. Workflows referenciam credenciais pelo nome.
 - n8n só orquestra: recebe webhook, chama nossa API, envia resposta, agenda e faz retry. Lógica de negócio fica na API.
-- Chamadas para a API levam header `X-Socio-Signature` (HMAC-SHA256 do corpo com `N8N_WEBHOOK_SECRET`).
+- Chamadas para a API levam `X-Socio-Timestamp` (segundos Unix) e `X-Socio-Signature` = hex(HMAC-SHA256(`N8N_WEBHOOK_SECRET`, `${timestamp}.${corpo}`)); vale ±5 min (apps/web/lib/agent-auth.ts).
 - Workflows: `wa-inbound`, `wa-buttons`, `reviews-hourly`, `briefing-daily` (10h, America/Sao_Paulo), `error-handler`.
 - Todo workflow tem um nó de erro que chama `error-handler`.

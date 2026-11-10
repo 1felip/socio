@@ -4,3 +4,4 @@ Uma linha por tarefa concluída (escrita pelo /done).
 - 2026-11-09 T04 — contrato iFood: pesquisa, openapi.yaml, schemas Zod, IfoodClient com mock e real
 - 2026-11-10 T07 — Aprovações com token único de 24 h, publicação no catálogo via mock e roi_events
 - 2026-11-10 T08 — Painel: login, upload, revisão editável, fila de aprovações e cards; modo demo sem chaves
+- 2026-11-10 T12 — Orquestrador: /api/agent com HMAC/sessão, roteador híbrido, loop de tools e memória curta

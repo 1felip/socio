@@ -9,9 +9,13 @@ import { createServiceClient } from '@socio/db';
 import {
   type ModelMessage,
   Output,
+  type StopCondition,
   embed as sdkEmbed,
   generateText as sdkGenerateText,
   streamText as sdkStreamText,
+  tool as sdkTool,
+  stepCountIs,
+  type ToolSet,
 } from 'ai';
 import type { z } from 'zod';
 import { isFakeMode } from './fake.ts';
@@ -306,6 +310,107 @@ export async function generateObject<S extends z.ZodType>(
     },
   );
   return { object: value, ...meta };
+}
+
+/**
+ * Tool que o modelo pode chamar no loop. Só leitura ou proposta de aprovação: tool de
+ * escrita na loja nunca entra aqui (ela exige approval_token, que o modelo não vê).
+ */
+export interface AgentTool<S extends z.ZodType = z.ZodType> {
+  description: string;
+  input: S;
+  execute(input: z.infer<S>): Promise<unknown>;
+}
+
+/** Ajuda a inferir o tipo do input a partir do schema. */
+export function defineTool<S extends z.ZodType>(t: AgentTool<S>): AgentTool<S> {
+  return t;
+}
+
+export interface ToolCallRecord {
+  name: string;
+  input: unknown;
+  output: unknown;
+}
+
+export type LoopStopReason = 'done' | 'max_steps' | 'cost_limit';
+
+export interface ToolLoopOptions extends CallOptions {
+  // biome-ignore lint/suspicious/noExplicitAny: cada tool tem seu próprio schema.
+  tools: Record<string, AgentTool<any>>;
+  /** Teto de passos (chamadas ao modelo). Padrão 5. */
+  maxSteps?: number;
+  /** Teto de custo deste loop em US$. Para no fim do passo que estourou. Padrão 0,05. */
+  maxCostUsd?: number;
+}
+
+export interface ToolLoopResult extends CallMeta {
+  text: string;
+  steps: number;
+  toolCalls: ToolCallRecord[];
+  stopReason: LoopStopReason;
+}
+
+/**
+ * Loop de tools do AI SDK com teto de passos, de custo e timeout (o timeout cobre o loop
+ * inteiro). Os tetos diários/por conversa são checados antes do primeiro passo.
+ */
+export async function generateWithTools(opts: ToolLoopOptions): Promise<ToolLoopResult> {
+  const { resolved, model } = languageModel(opts.role, rt().env);
+  const maxSteps = opts.maxSteps ?? 5;
+  const maxCostUsd = opts.maxCostUsd ?? 0.05;
+
+  const tools: ToolSet = {};
+  for (const [name, t] of Object.entries(opts.tools)) {
+    tools[name] = sdkTool({
+      description: t.description,
+      inputSchema: t.input,
+      execute: async (input: unknown) => t.execute(t.input.parse(input)),
+    });
+  }
+
+  let costStop = false;
+  const overBudget: StopCondition<ToolSet> = ({ steps }) => {
+    const spent = steps.reduce(
+      (acc, s) => acc + computeCost(resolved.modelId, toTokenUsage(s.usage)),
+      0,
+    );
+    costStop = spent >= maxCostUsd;
+    return costStop;
+  };
+
+  const { value, meta } = await run(
+    opts,
+    resolved,
+    opts.prompt ?? opts.messages,
+    async (signal) => {
+      const r = await sdkGenerateText({
+        model,
+        tools,
+        stopWhen: [stepCountIs(maxSteps), overBudget],
+        ...sdkCommon(opts, resolved, signal),
+      });
+      const toolCalls: ToolCallRecord[] = [];
+      for (const step of r.steps) {
+        for (const res of step.toolResults) {
+          toolCalls.push({ name: res.toolName, input: res.input, output: res.output });
+        }
+      }
+      const last = r.steps.at(-1);
+      const pendingTools = (last?.toolCalls.length ?? 0) > 0;
+      const stopReason: LoopStopReason = costStop
+        ? 'cost_limit'
+        : pendingTools && r.steps.length >= maxSteps
+          ? 'max_steps'
+          : 'done';
+      return {
+        value: { text: r.text, steps: r.steps.length, toolCalls, stopReason },
+        usage: r.totalUsage,
+        output: { text: r.text, toolCalls },
+      };
+    },
+  );
+  return { ...value, ...meta };
 }
 
 /**

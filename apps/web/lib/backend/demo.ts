@@ -8,6 +8,7 @@ import {
   createApprovalService,
   createCatalogPublisher,
   MemoryApprovalStore,
+  MemoryConversationStore,
   MemoryRoiStore,
 } from '@socio/agents';
 import {
@@ -43,6 +44,7 @@ export interface DemoState {
   uploads: Map<string, MenuUpload & { photo: Uint8Array }>;
   runs: Array<{ merchantId: string; costUsd: number; at: Date }>;
   approvalStore: MemoryApprovalStore;
+  conversationStore: MemoryConversationStore;
   roi: MemoryRoiStore;
   ifood: IfoodClient;
   secret: string;
@@ -65,6 +67,7 @@ export function createDemoState(env: Record<string, string | undefined> = proces
     uploads: new Map(),
     runs: [],
     approvalStore: new MemoryApprovalStore(),
+    conversationStore: new MemoryConversationStore(),
     roi: new MemoryRoiStore(),
     ifood: new MockIfoodClient(createMemoryStore(demoSeed)),
     secret: env.SESSION_SECRET || randomBytes(32).toString('hex'),
@@ -103,6 +106,7 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
 
   return {
     mode: 'demo',
+    conversations: state.conversationStore,
     approvals,
     publisher,
 

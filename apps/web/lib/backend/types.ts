@@ -1,4 +1,9 @@
-import type { ApprovalService, createCatalogPublisher, MenuDraft } from '@socio/agents';
+import type {
+  ApprovalService,
+  ConversationStore,
+  createCatalogPublisher,
+  MenuDraft,
+} from '@socio/agents';
 
 export type BackendMode = 'demo' | 'supabase';
 
@@ -87,6 +92,8 @@ export interface Backend {
   catalogTarget(merchantId: string): Promise<CatalogTarget | null>;
 
   readonly approvals: ApprovalService;
+  /** Memória curta do orquestrador (POST /api/agent). */
+  readonly conversations: ConversationStore;
   readonly publisher: CatalogPublisher;
 
   monthStats(merchantId: string, now: Date): Promise<MonthStats>;

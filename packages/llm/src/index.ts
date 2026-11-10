@@ -1,18 +1,32 @@
 export const packageName = '@socio/llm' as const;
 
 export {
+  type AgentTool,
   type CallContext,
   type CallMeta,
   type CallOptions,
   configureLlm,
+  defineTool,
   embed,
   generateObject,
   generateText,
+  generateWithTools,
   LlmCallError,
+  type LoopStopReason,
   streamText,
+  type ToolCallRecord,
+  type ToolLoopOptions,
+  type ToolLoopResult,
   untrusted,
 } from './client.ts';
-export { type FakeRequest, type FakeResponder, isFakeMode, setFakeResponder } from './fake.ts';
+export {
+  type FakeReply,
+  type FakeRequest,
+  type FakeResponder,
+  type FakeToolCall,
+  isFakeMode,
+  setFakeResponder,
+} from './fake.ts';
 export {
   assertWithinBudget,
   CostLimitError,
