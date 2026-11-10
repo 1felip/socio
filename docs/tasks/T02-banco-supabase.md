@@ -20,3 +20,12 @@ pnpm supabase db push      # pede confirmação
 pnpm db:types
 pnpm check
 ```
+
+## Estado (2026-11-09, sem contas)
+Feito offline: migrations em `supabase/migrations`, testes de RLS/analyst_ro em PGlite (`packages/db/src/schema.test.ts`),
+clientes em `packages/db`, `database.types.ts` escrito à mão (será sobrescrito).
+Pendente após a T00:
+1. `pnpm supabase link --project-ref <ref>` e `pnpm supabase db push` (pede confirmação).
+2. Login da role do Analista (fora da migration, no SQL Editor):
+   `alter role analyst_ro with login password '<senha forte>';` → montar `SUPABASE_DB_URL_ANALYST_RO` no `.env`.
+3. `pnpm db:types` e `pnpm check`. Conferir `get_advisors` (segurança) no Supabase.

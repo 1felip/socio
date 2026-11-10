@@ -15,7 +15,7 @@
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "eval:quick": "node -e \"console.log('eval:quick: nenhuma suíte ainda (placeholder)')\"",
-    "db:types": "supabase gen types typescript --local > packages/db/src/database.types.ts",
+    "db:types": "supabase gen types typescript --linked --schema public > packages/db/src/database.types.ts",
     "seed": "node -e \"console.log('seed: implementado na T03 (placeholder)')\""
   },
   "devDependencies": {
