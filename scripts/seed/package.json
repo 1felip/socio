@@ -1,0 +1,13 @@
+{
+  "name": "seed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node src/index.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@socio/db": "workspace:*"
+  }
+}

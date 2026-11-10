@@ -259,6 +259,12 @@ importers:
 
   packages/whatsapp: {}
 
+  scripts/seed:
+    dependencies:
+      '@socio/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+
 packages:
 
   '@ai-sdk/gateway@3.0.231':

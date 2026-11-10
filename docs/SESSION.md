@@ -1,8 +1,8 @@
 # Handoff
-Última tarefa: T04 Contrato iFood: pesquisa, mock e adapter (done)
-O que mudou: docs/research/ifood-api.md; packages/ifood-client/{openapi.yaml, src/schemas.ts, client.ts, mock.ts, memory-store.ts, fixtures.ts, real.ts, errors.ts, index.ts};
-.claude/skills/ifood-api/SKILL.md resumido. getIfoodClient() por IFOOD_MODE (mock padrão). Teste de contrato openapi × Zod.
-Atenção na próxima: mock usa store em memória (demoSeed); T03 deve implementar MockStore lendo do Supabase e passar em getIfoodClient({ store }).
-Review, Financial e listagens marcadas x-confirmed: false (páginas 404) — conferir manualmente antes do modo real. Polling: orders:polling vs events:polling em aberto.
+Última tarefa: T03 Dados sintéticos com padrões plantados (done offline)
+O que mudou: scripts/seed/{generate,stores,reviews,patterns,sql,index}.ts + seed.test.ts; evals/datasets/planted-patterns.json;
+migration 20261110000001 (v_item_sales_daily) + tipo em database.types.ts; @socio/db exporta ./testing; scripts/vitest.mjs (--filter → --project).
+Atenção na próxima: seed.sql é gerado e gitignored; aplicar no remoto com `supabase db reset --linked` (passo 4 da T02).
+MockStore do ifood-client lendo do Supabase segue pendente (precisa de banco real). Commit da T02 parcial: 53c6a2b.
 CLAUDE.md e README.md seguem com reformatação não commitada (fora das tarefas).
-Próxima tarefa sugerida: T00 Contas e chaves [HUMANO] (destrava T02 → T03).
+Próxima tarefa sugerida (offline): T05 camada LLM. T00 [HUMANO] ainda destrava T02 remoto.

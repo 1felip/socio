@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - scripts/seed
 allowBuilds:
   esbuild: true
   sharp: true

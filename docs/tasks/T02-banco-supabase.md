@@ -29,3 +29,4 @@ Pendente após a T00:
 2. Login da role do Analista (fora da migration, no SQL Editor):
    `alter role analyst_ro with login password '<senha forte>';` → montar `SUPABASE_DB_URL_ANALYST_RO` no `.env`.
 3. `pnpm db:types` e `pnpm check`. Conferir `get_advisors` (segurança) no Supabase.
+4. Dados demo (T03): `pnpm seed` e depois `pnpm supabase db reset --linked` (migrations + `supabase/seed.sql`; pede confirmação).

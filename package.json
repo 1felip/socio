@@ -12,11 +12,11 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "vitest run",
+    "test": "node scripts/vitest.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "eval:quick": "node -e \"console.log('eval:quick: nenhuma suíte ainda (placeholder)')\"",
     "db:types": "supabase gen types typescript --linked --schema public > packages/db/src/database.types.ts",
-    "seed": "node -e \"console.log('seed: implementado na T03 (placeholder)')\""
+    "seed": "pnpm --filter seed seed"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

@@ -218,6 +218,18 @@ export type Database = {
         };
         Relationships: [];
       };
+      v_item_sales_daily: {
+        Row: {
+          merchant_id: Uuid;
+          day: string;
+          catalog_item_id: Uuid | null;
+          item_name: string;
+          units_sold: number;
+          revenue_cents: number;
+          avg_unit_price_cents: number | null;
+        };
+        Relationships: [];
+      };
       v_reviews: {
         Row: {
           merchant_id: Uuid;
