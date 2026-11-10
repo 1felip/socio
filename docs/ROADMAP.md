@@ -12,7 +12,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T03 | 0 | Dados sintéticos com padrões plantados | T02 | CLAUDE | done |
 | T04 | 0 | Contrato iFood: pesquisa, mock e adapter | T01 | CLAUDE | done |
 | T05 | 1 | Camada LLM: modelos, custo e tracing | T02 | CLAUDE | doing |
-| T06 | 1 | Agente Cardápio: foto para rascunho | T05 | CLAUDE | todo |
+| T06 | 1 | Agente Cardápio: foto para rascunho | T05 | CLAUDE | doing |
 | T07 | 1 | Aprovações e publicação no catálogo | T04, T06 | CLAUDE | todo |
 | T08 | 1 | Painel: upload, revisão e aprovação | T07 | CLAUDE | todo |
 | T09 | 1 | Gabarito e eval do cardápio | T06 | AMBOS | todo |

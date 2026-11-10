@@ -1,8 +1,9 @@
 # Handoff
-Última tarefa: T05 Camada LLM: modelos, custo e tracing (parcial, segue doing)
-O que mudou: packages/llm/src/{registry,models,client,fake,limits,pricing,pii,prompts,runs,trace}.ts + testes; scripts/smoke.ts (`pnpm llm:smoke`).
-env.example com IDs de modelo e LLM_FAKE; @socio/db importa ./clients.ts (Node roda TS direto). D10 e D11 em DECISIONS.md.
-Atenção na próxima: aceite da T05 pendente só pelo smoke real (precisa de .env da T00). Preço de cache write da Anthropic é estimativa (1,25× input).
-Gemini com preço promocional até 31/12/2026. MODEL_EMBED: OpenAI no env.example x Gemini no D7, decidir na T00.
-T02 também espera T00 (db reset --linked + MockStore no Supabase). CLAUDE.md/README.md/tsbuildinfo seguem fora dos commits.
-Próxima tarefa sugerida: T00 [HUMANO] destrava T02 e T05; offline, a próxima que dependa só de T05/T04 (ver roadmap.mjs status).
+Tarefa em andamento: T06 Agente Cardápio: foto para rascunho
+Feito: schema MenuDraft (src/menu/schema.ts); etapa 1 vision + etapa 2 orchestrator (src/menu/pipeline.ts);
+prompts menu/extract.v1 e menu/refine.v1; CLI menu:extract (scripts/menu-extract.ts, LLM_FAKE=1 usa src/menu/fixtures.ts); testes com fake.
+Falta: aceite real: foto em evals/datasets/menus/samples/exemplo-1.jpg (pedir ao usuário) + chaves da T00 no .env.
+Estado: pnpm check verde (135 testes). Etapa 2 só recebe nome/descrição por índice; preço, outlier (0,4×–2,5× mediana, ≥3 preços) e low_confidence são calculados em código.
+Imagem vai como part `file` (ai 7 deprecou `image`). Sem MENU_MERCHANT_ID o CLI grava agent_runs só em memória.
+T02 e T05 seguem doing, esperando T00. CLAUDE.md/README.md/tsbuildinfo seguem fora dos commits.
+Próximo passo exato: com foto + .env, rodar `pnpm --filter @socio/agents menu:extract evals/datasets/menus/samples/exemplo-1.jpg` e conferir o JSON.
