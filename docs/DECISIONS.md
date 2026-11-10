@@ -26,3 +26,6 @@ Formato: `D<n> (T<id>) — decisão. Motivo.` Duas linhas no máximo.
 - D14 (T12) — Orquestrador (`POST /api/agent`): roteador híbrido (regras com peso; modelo `fast` só sem sinal ou empate; erro → `conversa`). Loop de tools via `generateWithTools` em packages/llm
   (AI SDK, `maxSteps`, teto de custo por loop, timeout); handlers só recebem tools de leitura/proposta. Memória curta em `conversations.state.messages` (últimas 12, sem tabela nova).
   Avaliações, analista e campanhas respondem "chegando" até T14/T15/T22 trocarem o handler. HMAC do n8n assina `${timestamp}.${corpo}` (±5 min); painel força `channel=panel` e checa membro.
+- D15 (T13) — MCP server `ifood-parceiro` (SDK v1 `@modelcontextprotocol/sdk` 1.32.2; a v2 dividida em pacotes fica para depois). Uma loja por processo (`SOCIO_BACKEND` demo|supabase, mesma fiação do painel).
+  `catalog_publish` recebe só `approvalId`: o dono confirma por elicitation em modo form (só sim/não, nada sensível, conforme a spec) e o server faz approve + publish na hora, como o painel; o token nunca sai do server.
+  Sem elicitation (ou via HTTP stateless) nada é publicado. HTTP: Bearer com 32+ caracteres, 127.0.0.1 por padrão, 1 MB. `analytics_query` = resumo fixo do IfoodClient até a T15 (SQL via analyst_ro). Comentários de avaliação saem com maskPII. Runtime via tsx (imports sem extensão nos pacotes).

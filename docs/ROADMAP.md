@@ -19,7 +19,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T10 | 1 | Deploy e demo para recrutador | T08 | AMBOS | todo |
 | T11 | 1 | README, vídeo e inscrição | T09, T10 | AMBOS | todo |
 | T12 | 2 | Orquestrador e roteamento | T07 | CLAUDE | done |
-| T13 | 2 | MCP server ifood-parceiro | T07 | CLAUDE | todo |
+| T13 | 2 | MCP server ifood-parceiro | T07 | CLAUDE | done |
 | T14 | 2 | Agente Avaliações | T03, T12 | CLAUDE | todo |
 | T15 | 2 | Agente Analista: texto para SQL | T03, T12 | CLAUDE | todo |
 | T16 | 2 | WhatsApp Cloud API | T12 | AMBOS | todo |

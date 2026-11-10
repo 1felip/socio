@@ -1,11 +1,12 @@
 # Handoff
-Última tarefa: T12 Orquestrador e roteamento (done)
-O que mudou: packages/agents/src/orchestrator/ (schema, router, memory, orchestrator) + prompts/orchestrator/{router,chat}.v1.md;
-packages/llm generateWithTools/defineTool (loop de tools com maxSteps, teto de custo, timeout; fake emite tool calls);
-apps/web POST /api/agent (lib/agent-endpoint.ts, lib/agent-auth.ts HMAC ts.corpo ±5 min), Backend.conversations; evals/datasets/routing/phrases.json. D14.
-Atenção na próxima: roteamento 18/20 com fake (2 frases sem palavra-chave dependem do modelo real; confirmar após T00).
-Avaliações/analista/campanhas respondem "chegando": T14/T15/T22 trocam via handlers do createOrchestrator. Áudio (T18) e foto via WhatsApp (T16) com resposta fixa.
-n8n (T17) deve assinar `${X-Socio-Timestamp}.${corpo}` (skill n8n-workflows atualizada). SupabaseConversationStore só compila (testar com T00).
-Ainda pendente de T08: proxy.ts para renovar sessão do Supabase. Fora dos commits: CLAUDE.md, README.md, tsbuildinfo, apps/web/AGENTS.md, next-env.d.ts, evals/reports/.
-T02, T05 e T06 seguem doing esperando T00 (.env) e a foto evals/datasets/menus/samples/exemplo-1.jpg.
-Próxima tarefa sugerida: T02 Banco Supabase: schema, RLS e tipos (bloqueada por T00). Offline: T13 MCP server ifood-parceiro.
+Última tarefa: T13 MCP server ifood-parceiro (done)
+O que mudou: packages/mcp-ifood/src/{context,tools,stdio,http}.ts (7 tools sobre IfoodClient/approvals/publisher; demo|supabase via SOCIO_BACKEND);
+docs/mcp.md (Claude Desktop, Claude Code, HTTP, Inspector); D15. Deps: @modelcontextprotocol/sdk 1.32.2 (v1), tsx (dev).
+Atenção na próxima: rodar o server só via tsx (pacotes têm imports sem extensão; Node puro falha). Inspector:
+`npx @modelcontextprotocol/inspector --cli node packages/mcp-ifood/node_modules/tsx/dist/cli.mjs packages/mcp-ifood/src/stdio.ts --method tools/list`.
+catalog_publish publica só com confirmação do dono por elicitation (sem token no modelo); no HTTP stateless não publica.
+Env novas (SOCIO_MCP_MERCHANT_ID, SOCIO_MCP_OWNER_USER_ID, SOCIO_MCP_HTTP_TOKEN/HOST/PORT) não foram ao .env.example (regra bloqueia o arquivo): adicionar à mão.
+reviews_reply_draft só cria aprovação (publicar resposta = T14); analytics_query = resumo fixo até T15. Modo supabase do MCP só compila (testar após T00).
+Herdado: T02, T05, T06 doing esperando T00 (.env) e a foto evals/datasets/menus/samples/exemplo-1.jpg; proxy.ts da T08 pendente.
+Fora dos commits: CLAUDE.md, README.md, tsbuildinfo, apps/web/AGENTS.md, next-env.d.ts, evals/reports/.
+Próxima tarefa sugerida: T02 Banco Supabase: schema, RLS e tipos (bloqueada por T00 Contas e chaves).

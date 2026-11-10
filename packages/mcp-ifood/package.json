@@ -7,6 +7,20 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "stdio": "tsx --env-file-if-exists=../../.env src/stdio.ts",
+    "http": "tsx --env-file-if-exists=../../.env src/http.ts",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/stdio.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@socio/agents": "workspace:*",
+    "@socio/db": "workspace:*",
+    "@socio/ifood-client": "workspace:*",
+    "@socio/llm": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "tsx": "4.21.0"
   }
 }
