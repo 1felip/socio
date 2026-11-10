@@ -1,8 +1,8 @@
 # Handoff
-Última tarefa: T03 Dados sintéticos com padrões plantados (done offline)
-O que mudou: scripts/seed/{generate,stores,reviews,patterns,sql,index}.ts + seed.test.ts; evals/datasets/planted-patterns.json;
-migration 20261110000001 (v_item_sales_daily) + tipo em database.types.ts; @socio/db exporta ./testing; scripts/vitest.mjs (--filter → --project).
-Atenção na próxima: seed.sql é gerado e gitignored; aplicar no remoto com `supabase db reset --linked` (passo 4 da T02).
-MockStore do ifood-client lendo do Supabase segue pendente (precisa de banco real). Commit da T02 parcial: 53c6a2b.
-CLAUDE.md e README.md seguem com reformatação não commitada (fora das tarefas).
-Próxima tarefa sugerida (offline): T05 camada LLM. T00 [HUMANO] ainda destrava T02 remoto.
+Última tarefa: T05 Camada LLM: modelos, custo e tracing (parcial, segue doing)
+O que mudou: packages/llm/src/{registry,models,client,fake,limits,pricing,pii,prompts,runs,trace}.ts + testes; scripts/smoke.ts (`pnpm llm:smoke`).
+env.example com IDs de modelo e LLM_FAKE; @socio/db importa ./clients.ts (Node roda TS direto). D10 e D11 em DECISIONS.md.
+Atenção na próxima: aceite da T05 pendente só pelo smoke real (precisa de .env da T00). Preço de cache write da Anthropic é estimativa (1,25× input).
+Gemini com preço promocional até 31/12/2026. MODEL_EMBED: OpenAI no env.example x Gemini no D7, decidir na T00.
+T02 também espera T00 (db reset --linked + MockStore no Supabase). CLAUDE.md/README.md/tsbuildinfo seguem fora dos commits.
+Próxima tarefa sugerida: T00 [HUMANO] destrava T02 e T05; offline, a próxima que dependa só de T05/T04 (ver roadmap.mjs status).

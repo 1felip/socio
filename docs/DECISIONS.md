@@ -13,3 +13,6 @@ Formato: `D<n> (T<id>) — decisão. Motivo.` Duas linhas no máximo.
 - D7 (T02) — Embeddings com 768 dimensões (`vector(768)`): MODEL_EMBED do Gemini com output_dimensionality=768. Menor custo de índice; trocar exige migration.
 - D8 (T02) — Migrations testadas offline com PGlite + shim de auth/storage (sem Docker). Analista escopado por `app.merchant_id`; views v_* sem acesso para anon/authenticated.
 - D9 (T03) — Seed como `supabase/seed.sql` gerado (seed fixa, janela fixa de 2026-08-01 a 2026-10-29), validado em PGlite e aplicado com `db reset`. Padrões plantados verificados só por views v_*; nova `v_item_sales_daily`.
+- D10 (T05) — AI SDK `ai` 7 + Langfuse v6 via OTel com TracerProvider próprio (não global). Saída estruturada por `generateText`+`Output.object` e revalidada em Zod; system em `instructions` com cacheControl na Anthropic.
+  agent_runs grava `agente:step` em `agent` (sem coluna step). Tetos checados antes da chamada; bloqueio gravado como `blocked`. Claude 5.x: `temperature` é omitida.
+- D11 (T05) — env.example usa MODEL_EMBED=text-embedding-3-small com `dimensions: 768` (o D7 previa Gemini). O código aceita os dois provedores em 768; a escolha final fica para a T00.

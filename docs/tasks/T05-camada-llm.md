@@ -19,3 +19,7 @@ Fase 1 · Quem: CLAUDE · Depende: T02 · Estimativa: 3–4 h · Skills: llm-pat
 pnpm check
 pnpm llm:smoke      # 3 OK e linhas novas em agent_runs
 ```
+
+## Estado (2026-11-10)
+Feito offline: todos os itens de "Entregar"; `pnpm check` verde (121 testes).
+Falta (depende da T00): `pnpm llm:smoke` com chaves reais no .env → 3 OK e linhas em agent_runs. Com Supabase no env o smoke grava na 1ª loja (ou SMOKE_MERCHANT_ID).
