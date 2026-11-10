@@ -130,19 +130,20 @@ export type Database = {
         {
           id: Uuid;
           merchant_id: Uuid;
-          kind: 'catalog_update' | 'review_reply' | 'promotion' | 'message_send';
+          kind: 'catalog.publish' | 'review.reply' | 'promo.create' | 'message.send';
           payload: Json;
           payload_hash: string;
+          summary: string;
           status: 'pending' | 'approved' | 'rejected' | 'expired' | 'executed';
-          token_hash: string;
-          expires_at: Timestamp;
+          token_hash: string | null;
+          expires_at: Timestamp | null;
           requested_by: string;
           approved_by: Uuid | null;
           approved_at: Timestamp | null;
           executed_at: Timestamp | null;
           created_at: Timestamp;
         },
-        'merchant_id' | 'kind' | 'payload' | 'payload_hash' | 'token_hash' | 'expires_at' | 'requested_by'
+        'merchant_id' | 'kind' | 'payload' | 'payload_hash' | 'requested_by'
       >;
       agent_runs: Table<
         {
@@ -171,6 +172,9 @@ export type Database = {
           value_cents: number;
           minutes_saved: number;
           ref_id: Uuid | null;
+          manual_minutes_estimate: number;
+          estimate_source: string;
+          flow_duration_ms: number | null;
           created_at: Timestamp;
         },
         'merchant_id' | 'kind'

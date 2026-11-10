@@ -27,7 +27,7 @@ beforeAll(async () => {
     insert into public.reviews (merchant_id, rating, comment, customer_name, reviewed_at) values
       ('${MERCHANT_A}', 5, 'Muito bom', 'Maria Silva', '2026-11-02 12:00-03');
     insert into public.approvals (merchant_id, kind, payload, payload_hash, token_hash, expires_at, requested_by) values
-      ('${MERCHANT_A}', 'review_reply', '{}', 'h', 'secret-token-hash', now() + interval '1 day', 'agent:reviews');
+      ('${MERCHANT_A}', 'review.reply', '{}', 'h', 'secret-token-hash', now() + interval '1 day', 'agent:reviews');
   `);
 }, 60_000);
 
@@ -56,6 +56,39 @@ describe('migrations', () => {
         MERCHANT_A,
       ]),
     ).rejects.toThrow(/approvals_approved_has_actor/);
+  });
+
+  it('aceita aprovação pendente sem token e recusa aprovada sem token', async () => {
+    await db.query(
+      `insert into public.approvals (merchant_id, kind, payload, payload_hash, requested_by)
+       values ($1, 'catalog.publish', '{}', 'h2', 'agent:menu')`,
+      [MERCHANT_A],
+    );
+    await expect(
+      db.query(
+        `update public.approvals set status = 'approved', approved_by = $2, approved_at = now()
+         where payload_hash = 'h2' and merchant_id = $1`,
+        [MERCHANT_A, USER_A],
+      ),
+    ).rejects.toThrow(/approvals_approved_has_token/);
+  });
+
+  it('não deixa alterar o payload de uma aprovação', async () => {
+    await expect(
+      db.query(`update public.approvals set payload = '{"x":1}' where merchant_id = $1`, [
+        MERCHANT_A,
+      ]),
+    ).rejects.toThrow(/imutáveis/);
+  });
+
+  it('recusa kind fora da lista da skill approvals', async () => {
+    await expect(
+      db.query(
+        `insert into public.approvals (merchant_id, kind, payload, payload_hash, requested_by)
+         values ($1, 'catalog_update', '{}', 'h3', 'agent:menu')`,
+        [MERCHANT_A],
+      ),
+    ).rejects.toThrow(/approvals_kind_check/);
   });
 });
 

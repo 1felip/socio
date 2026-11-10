@@ -227,6 +227,12 @@ importers:
 
   packages/agents:
     dependencies:
+      '@socio/db':
+        specifier: workspace:*
+        version: link:../db
+      '@socio/ifood-client':
+        specifier: workspace:*
+        version: link:../ifood-client
       '@socio/llm':
         specifier: workspace:*
         version: link:../llm

@@ -1,9 +1,8 @@
 # Handoff
-Tarefa em andamento: T06 Agente Cardápio: foto para rascunho
-Feito: schema MenuDraft (src/menu/schema.ts); etapa 1 vision + etapa 2 orchestrator (src/menu/pipeline.ts);
-prompts menu/extract.v1 e menu/refine.v1; CLI menu:extract (scripts/menu-extract.ts, LLM_FAKE=1 usa src/menu/fixtures.ts); testes com fake.
-Falta: aceite real: foto em evals/datasets/menus/samples/exemplo-1.jpg (pedir ao usuário) + chaves da T00 no .env.
-Estado: pnpm check verde (135 testes). Etapa 2 só recebe nome/descrição por índice; preço, outlier (0,4×–2,5× mediana, ≥3 preços) e low_confidence são calculados em código.
-Imagem vai como part `file` (ai 7 deprecou `image`). Sem MENU_MERCHANT_ID o CLI grava agent_runs só em memória.
-T02 e T05 seguem doing, esperando T00. CLAUDE.md/README.md/tsbuildinfo seguem fora dos commits.
-Próximo passo exato: com foto + .env, rodar `pnpm --filter @socio/agents menu:extract evals/datasets/menus/samples/exemplo-1.jpg` e conferir o JSON.
+Última tarefa: T07 Aprovações e publicação no catálogo (done, offline com mock)
+O que mudou: migration supabase/migrations/20261110000002_approvals_tokens.sql (kinds da skill, token só no approve, summary, trigger de imutabilidade, colunas de ROI);
+packages/agents/src/approvals/ (serviço + SupabaseApprovalStore), src/catalog/publish.ts (propose + publish, MenuDraft → ItemUpsert), src/roi/roi.ts. D12 em DECISIONS.
+Atenção na próxima: approve/reject recebem { approvalId, merchantId, userId }; a rota da T08 precisa checar se userId é dono da loja. catalogId/categoryIds ainda não conferidos com o catálogo real (T08).
+O token sai só de approve() para o canal; o serviço nunca devolve tokenHash. database.types.ts segue escrito à mão até `pnpm db:types`.
+T02, T05 e T06 seguem doing esperando T00 (.env) e a foto em evals/datasets/menus/samples/exemplo-1.jpg. CLAUDE.md/README.md/tsbuildinfo seguem fora dos commits.
+Próxima tarefa sugerida: T02 (bloqueada por T00). Sem T00, dá para adiantar T08 (painel, depende de T07) offline.

@@ -16,3 +16,8 @@ Formato: `D<n> (T<id>) — decisão. Motivo.` Duas linhas no máximo.
 - D10 (T05) — AI SDK `ai` 7 + Langfuse v6 via OTel com TracerProvider próprio (não global). Saída estruturada por `generateText`+`Output.object` e revalidada em Zod; system em `instructions` com cacheControl na Anthropic.
   agent_runs grava `agente:step` em `agent` (sem coluna step). Tetos checados antes da chamada; bloqueio gravado como `blocked`. Claude 5.x: `temperature` é omitida.
 - D11 (T05) — env.example usa MODEL_EMBED=text-embedding-3-small com `dimensions: 768` (o D7 previa Gemini). O código aceita os dois provedores em 768; a escolha final fica para a T00.
+- D12 (T07) — Aprovação nasce sem token; `approve()` gera token de 32 bytes (só sha256 no banco, 24 h). Kinds do banco = skill (`catalog.publish`...). Consumo por UPDATE condicional (status + token_hash + expires_at) antes da escrita: uso único mesmo com corrida.
+  Falha do iFood no meio não devolve o token (nova aprovação para o resto). IDs do catálogo derivados do id da aprovação. ROI: `manual_minutes_estimate` por kind (base + por item, `estimate_source` = "a medir na T11"), duração = criação da aprovação → publicação.
+  Revisão de segurança (T07): approve/reject exigem merchantId (outra loja = not_found, sem enumeração; checar membro/dono fica na rota da T08); pendente expira em 7 dias;
+  serviço nunca devolve tokenHash; texto do rascunho limitado (80/200, sem controle nem links, ≤ 300 itens) antes de virar aprovação; payload e loja validados antes de consumir o token;
+  trigger torna payload/hash/loja/kind imutáveis. catalogId do payload ainda não é conferido com o catálogo da loja (fica para a T08, que lista as categorias reais).

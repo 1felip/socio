@@ -11,6 +11,8 @@
     "menu:extract": "node --env-file-if-exists=../../.env scripts/menu-extract.ts"
   },
   "dependencies": {
+    "@socio/db": "workspace:*",
+    "@socio/ifood-client": "workspace:*",
     "@socio/llm": "workspace:*",
     "zod": "4.6.7"
   }
