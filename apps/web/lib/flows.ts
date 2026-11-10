@@ -1,0 +1,136 @@
+/**
+ * Regras do painel, iguais para os modos demo e supabase (testadas sem Next).
+ *
+ * - Ver loja, subir foto e mandar rascunho para aprovação: qualquer membro.
+ * - Aprovar ou rejeitar: só o dono (role = owner). É a checagem que o serviço de
+ *   aprovações espera da rota antes de `approve/reject`.
+ */
+import {
+  type Approval,
+  ApprovalError,
+  CATALOG_PUBLISH,
+  CatalogPublishError,
+  proposeCatalogPublish,
+} from '@socio/agents';
+import type { Backend, MenuImage, MerchantRef, SessionUser } from './backend/types.ts';
+import { buildPublishPayload } from './review-form.ts';
+
+export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
+export class FlowError extends Error {
+  override readonly name = 'FlowError';
+}
+
+export type FlowResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
+const ok = <T>(value: T): FlowResult<T> => ({ ok: true, value });
+const fail = (error: string): FlowResult<never> => ({ ok: false, error });
+
+export async function membership(
+  backend: Backend,
+  user: SessionUser,
+  merchantId: string,
+): Promise<MerchantRef | null> {
+  const list = await backend.merchantsFor(user.id);
+  return list.find((m) => m.id === merchantId) ?? null;
+}
+
+/** Confere tipo e tamanho pelo conteúdo, não pela extensão. */
+export function sniffImageType(data: Uint8Array): (typeof PHOTO_TYPES)[number] | null {
+  const b = (i: number) => data[i] ?? -1;
+  if (b(0) === 0xff && b(1) === 0xd8 && b(2) === 0xff) return 'image/jpeg';
+  if (b(0) === 0x89 && b(1) === 0x50 && b(2) === 0x4e && b(3) === 0x47) return 'image/png';
+  if (b(0) === 0x52 && b(1) === 0x49 && b(2) === 0x46 && b(3) === 0x46) {
+    if (b(8) === 0x57 && b(9) === 0x45 && b(10) === 0x42 && b(11) === 0x50) return 'image/webp';
+  }
+  return null;
+}
+
+export async function uploadMenuPhoto(
+  backend: Backend,
+  user: SessionUser,
+  merchantId: string,
+  data: Uint8Array,
+): Promise<FlowResult<{ uploadId: string; status: string; error: string | null }>> {
+  if (!(await membership(backend, user, merchantId))) return fail('Loja não encontrada.');
+  if (data.byteLength === 0) return fail('Escolha uma foto do cardápio.');
+  if (data.byteLength > MAX_PHOTO_BYTES) return fail('A foto passa de 10 MB. Manda uma menor?');
+  const mediaType = sniffImageType(data);
+  if (!mediaType) return fail('Use uma foto em JPG, PNG ou WEBP.');
+  const image: MenuImage = { data, mediaType };
+  const upload = await backend.createUpload(merchantId, user.id, image);
+  return ok({ uploadId: upload.id, status: upload.status, error: upload.error });
+}
+
+export async function submitDraft(
+  backend: Backend,
+  user: SessionUser,
+  merchantId: string,
+  uploadId: string,
+  formJson: string,
+): Promise<FlowResult<Approval>> {
+  if (!(await membership(backend, user, merchantId))) return fail('Loja não encontrada.');
+  const upload = await backend.getUpload(uploadId, merchantId);
+  if (upload?.status !== 'drafted') return fail('Rascunho não encontrado.');
+  const target = await backend.catalogTarget(merchantId);
+  if (!target) return fail('Não achei o cardápio da loja no iFood.');
+
+  // Avisos vêm do rascunho salvo, não do navegador.
+  const built = buildPublishPayload(formJson, target, upload.draft?.warnings ?? []);
+  if (!built.ok) return built;
+  try {
+    const approval = await proposeCatalogPublish(backend.approvals, {
+      merchantId,
+      payload: built.value,
+      requestedBy: `user:${user.id}`,
+    });
+    return ok(approval);
+  } catch {
+    return fail('Não consegui criar a aprovação. Confere os itens e tenta de novo.');
+  }
+}
+
+export interface DecisionOutcome {
+  approval: Approval;
+  itemsPublished?: number;
+}
+
+export async function decide(
+  backend: Backend,
+  user: SessionUser,
+  merchantId: string,
+  approvalId: string,
+  decision: 'approve' | 'reject',
+): Promise<FlowResult<DecisionOutcome>> {
+  const member = await membership(backend, user, merchantId);
+  if (!member) return fail('Loja não encontrada.');
+  if (member.role !== 'owner') return fail('Só o dono da loja pode aprovar ou recusar.');
+
+  const current = await backend.approvals.get(approvalId, merchantId);
+  if (!current) return fail('Aprovação não encontrada.');
+  const d = { approvalId, merchantId, userId: user.id };
+
+  try {
+    if (decision === 'reject') return ok({ approval: await backend.approvals.reject(d) });
+
+    // Só aprova o que o painel sabe executar: o token não pode se perder.
+    if (current.kind !== CATALOG_PUBLISH) {
+      return fail('Este tipo de aprovação ainda é feito pelo WhatsApp.');
+    }
+    const { approval, token } = await backend.approvals.approve(d);
+    const result = await backend.publisher.publish({
+      merchantId,
+      approvalId: approval.id,
+      approvalToken: token,
+      payload: approval.payload,
+    });
+    const done = (await backend.approvals.get(approval.id, merchantId)) ?? approval;
+    return ok({ approval: done, itemsPublished: result.itemsPublished });
+  } catch (err) {
+    if (err instanceof ApprovalError || err instanceof CatalogPublishError) {
+      return fail(err.message);
+    }
+    return fail('Deu um problema ao publicar. Confere a fila de aprovações e tenta de novo.');
+  }
+}

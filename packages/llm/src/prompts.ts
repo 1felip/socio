@@ -5,11 +5,18 @@
  * Mudou o comportamento → crie <nome>.v<N+1>.md; nunca edite uma versão publicada.
  */
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isModelRole, type ModelRole } from './registry.ts';
 
-export const DEFAULT_PROMPTS_DIR = fileURLToPath(new URL('../../agents/prompts', import.meta.url));
+/**
+ * Diretório dos prompts. `SOCIO_PROMPTS_DIR` sobrescreve (o painel Next define, porque o
+ * bundler não preserva o caminho do arquivo-fonte). Sem new URL(..., import.meta.url) aqui:
+ * o Turbopack tentaria empacotar a pasta como asset.
+ */
+export const DEFAULT_PROMPTS_DIR =
+  process.env.SOCIO_PROMPTS_DIR ||
+  join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'agents', 'prompts');
 
 export interface Prompt {
   /** "<agente>/<nome>@v<N>", gravado em agent_runs.prompt_version. */
@@ -53,7 +60,7 @@ export function parseFrontmatter(raw: string): { data: Record<string, string>; b
 export function listPromptVersions(agent: string, name: string, dir = DEFAULT_PROMPTS_DIR) {
   let files: string[];
   try {
-    files = readdirSync(join(dir, agent));
+    files = readdirSync(/* turbopackIgnore: true */ join(dir, agent));
   } catch {
     return [];
   }
@@ -73,8 +80,8 @@ export function loadPrompt(agent: string, name: string, options: LoadPromptOptio
       `prompt não encontrado: ${agent}/${name}${options.version ? `.v${options.version}` : ''}`,
     );
   }
-  const file = join(dir, agent, `${name}.v${version}.md`);
-  const { data, body } = parseFrontmatter(readFileSync(file, 'utf8'));
+  const file = join(/* turbopackIgnore: true */ dir, agent, `${name}.v${version}.md`);
+  const { data, body } = parseFrontmatter(readFileSync(/* turbopackIgnore: true */ file, 'utf8'));
 
   if (!data.role || !isModelRole(data.role)) {
     throw new Error(`${file}: frontmatter "role" inválido (${data.role ?? 'ausente'})`);

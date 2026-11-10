@@ -21,3 +21,5 @@ Formato: `D<n> (T<id>) — decisão. Motivo.` Duas linhas no máximo.
   Revisão de segurança (T07): approve/reject exigem merchantId (outra loja = not_found, sem enumeração; checar membro/dono fica na rota da T08); pendente expira em 7 dias;
   serviço nunca devolve tokenHash; texto do rascunho limitado (80/200, sem controle nem links, ≤ 300 itens) antes de virar aprovação; payload e loja validados antes de consumir o token;
   trigger torna payload/hash/loja/kind imutáveis. catalogId do payload ainda não é conferido com o catálogo da loja (fica para a T08, que lista as categorias reais).
+- D13 (T08) — Painel atrás da interface `Backend` (apps/web/lib/backend): `demo` (memória + mock iFood + rascunho fixo, sessão HMAC) e `supabase`; `SOCIO_BACKEND` escolhe, produção exige valor explícito.
+  Autorização em lib/flows.ts (membro envia, só owner aprova/rejeita); aprovar no painel = approve + publish na mesma ação; categorias vêm do catálogo real e são revalidadas no servidor.

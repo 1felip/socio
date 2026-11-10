@@ -187,6 +187,24 @@ importers:
 
   apps/web:
     dependencies:
+      '@socio/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
+      '@socio/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@socio/ifood-client':
+        specifier: workspace:*
+        version: link:../../packages/ifood-client
+      '@socio/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
+      '@supabase/ssr':
+        specifier: 0.12.7
+        version: 0.12.7(@supabase/supabase-js@2.119.0(@opentelemetry/api@1.10.0))
+      '@supabase/supabase-js':
+        specifier: 2.119.0
+        version: 2.119.0(@opentelemetry/api@1.10.0)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -208,6 +226,9 @@ importers:
       tailwind-merge:
         specifier: 3.7.0
         version: 3.7.0
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@tailwindcss/postcss':
         specifier: 4.3.5

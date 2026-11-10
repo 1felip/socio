@@ -23,7 +23,10 @@ process.stdin.on('end', () => {
       process.platform === 'win32' ? 'biome.cmd' : 'biome',
     );
     if (!fs.existsSync(bin)) process.exit(0); // Biome ainda não instalado (antes da T01)
-    const r = spawnSync(bin, ['check', '--write', '--no-errors-on-unmatched', file], {
+    const win = process.platform === 'win32';
+    // Com shell no Windows, caminhos com ( ) ou espaço (ex.: app/(painel)) precisam de aspas.
+    const target = win ? `"${file}"` : file;
+    const r = spawnSync(bin, ['check', '--write', '--no-errors-on-unmatched', target], {
       cwd: root,
       encoding: 'utf8',
       shell: process.platform === 'win32',

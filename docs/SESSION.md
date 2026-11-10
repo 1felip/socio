@@ -1,8 +1,11 @@
 # Handoff
-Última tarefa: T07 Aprovações e publicação no catálogo (done, offline com mock)
-O que mudou: migration supabase/migrations/20261110000002_approvals_tokens.sql (kinds da skill, token só no approve, summary, trigger de imutabilidade, colunas de ROI);
-packages/agents/src/approvals/ (serviço + SupabaseApprovalStore), src/catalog/publish.ts (propose + publish, MenuDraft → ItemUpsert), src/roi/roi.ts. D12 em DECISIONS.
-Atenção na próxima: approve/reject recebem { approvalId, merchantId, userId }; a rota da T08 precisa checar se userId é dono da loja. catalogId/categoryIds ainda não conferidos com o catálogo real (T08).
-O token sai só de approve() para o canal; o serviço nunca devolve tokenHash. database.types.ts segue escrito à mão até `pnpm db:types`.
-T02, T05 e T06 seguem doing esperando T00 (.env) e a foto em evals/datasets/menus/samples/exemplo-1.jpg. CLAUDE.md/README.md/tsbuildinfo seguem fora dos commits.
-Próxima tarefa sugerida: T02 (bloqueada por T00). Sem T00, dá para adiantar T08 (painel, depende de T07) offline.
+Última tarefa: T08 Painel: upload, revisão e aprovação (done, aceite ui-tester no modo demo)
+O que mudou: apps/web/lib/backend/ (types, demo, supabase, index), lib/flows.ts (regras membro/dono), lib/review-form.ts, lib/session.ts, app/actions.ts;
+rotas app/login, app/(painel)/{page, cardapio/novo, cardapio/[id], aprovacoes, aprovacoes/[id]}. D13 em DECISIONS.
+packages/llm/src/prompts.ts aceita SOCIO_PROMPTS_DIR (next.config define); hook post-edit agora cita caminhos com ( ).
+Atenção na próxima: modo supabase só compila — testar com T00 (login, Storage menu-photos, extractMenu, monthStats).
+Falta proxy.ts para renovar sessão do Supabase (> 1 h cai). Demo: dono@socio.demo / socio-demo (SOCIO_BACKEND=demo pnpm --filter web dev).
+Turbopack ainda avisa de fs dinâmico em packages/llm/src/prompts.ts:63 (não bloqueia).
+Fora dos commits: CLAUDE.md, README.md, tsbuildinfo, apps/web/AGENTS.md e next-env.d.ts (gerados pelo next dev), evals/reports/ui/.
+T02, T05 e T06 seguem doing esperando T00 (.env) e a foto evals/datasets/menus/samples/exemplo-1.jpg.
+Próxima tarefa sugerida: T02 Banco Supabase: schema, RLS e tipos (bloqueada por T00). Sem T00, ver próximas tarefas offline com roadmap.mjs status.
