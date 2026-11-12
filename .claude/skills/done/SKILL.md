@@ -18,5 +18,5 @@ disable-model-invocation: true
    Atenção na próxima: <pegadinhas, TODOs, comandos>
    Próxima tarefa sugerida: <saída de roadmap.mjs next>
    ```
-8. `git add -A` e `git commit -m "feat(<ID>): <título curto>"`.
-9. Responda só: "Commitado. Rode /clear e depois /next."
+8. `git add -A`, `git commit -m "feat(<ID>): <título curto>"` e `git push origin main` (todo commit vai para o GitHub).
+9. Responda só: "Commitado e enviado ao GitHub. Rode /clear e depois /next."

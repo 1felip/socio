@@ -13,5 +13,5 @@ disable-model-invocation: true
    Estado: <testes passando? o que está quebrado? arquivo e linha>
    Próximo passo exato: <1 frase>
    ```
-3. `git add -A` e `git commit -m "wip(<ID>): <resumo>"`.
+3. `git add -A`, `git commit -m "wip(<ID>): <resumo>"` e `git push origin main`.
 4. Responda só: "Salvo. Rode /clear e depois /next <ID>."
