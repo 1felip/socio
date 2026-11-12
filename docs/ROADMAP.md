@@ -17,7 +17,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T08 | 1 | Painel: upload, revisão e aprovação | T07 | CLAUDE | done |
 | T09 | 1 | Gabarito e eval do cardápio | T06 | AMBOS | doing |
 | T10 | 1 | Deploy e demo para recrutador | T08 | AMBOS | doing |
-| T11 | 1 | README, vídeo e inscrição | T09, T10 | AMBOS | todo |
+| T11 | 1 | README, vídeo e inscrição | T09, T10 | AMBOS | doing |
 | T12 | 2 | Orquestrador e roteamento | T07 | CLAUDE | done |
 | T13 | 2 | MCP server ifood-parceiro | T07 | CLAUDE | done |
 | T14 | 2 | Agente Avaliações | T03, T12 | CLAUDE | doing |
