@@ -1,0 +1,6 @@
+{
+  "suite": "menu",
+  "quick": [],
+  "targets": { "itemF1": 0.9, "priceAccuracy": 0.95 },
+  "notes": "Casos = evals/datasets/menus/gold/<id>.json (gabarito humano via `pnpm menu:gold`). Fotos em images/ (fora do git). `quick`: 5 ids para o CI (preencher depois do gabarito). Metas registradas; não bloqueiam a T09. Gabarito é verdade: não edite para passar."
+}

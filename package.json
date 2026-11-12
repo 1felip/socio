@@ -14,12 +14,14 @@
     "format": "biome check --write .",
     "test": "node scripts/vitest.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
-    "eval:quick": "node -e \"console.log('eval:quick: nenhuma suíte ainda (placeholder)')\"",
+    "eval:quick": "pnpm --filter @socio/agents eval:menu --quick",
     "db:types": "supabase gen types typescript --linked --schema public > packages/db/src/database.types.ts",
     "seed": "pnpm --filter seed seed",
     "llm:smoke": "pnpm --filter @socio/llm smoke",
     "eval:reviews": "pnpm --filter @socio/agents eval:reviews",
-    "eval:analyst": "pnpm --filter @socio/agents eval:analyst"
+    "eval:analyst": "pnpm --filter @socio/agents eval:analyst",
+    "eval:menu": "pnpm --filter @socio/agents eval:menu",
+    "menu:gold": "pnpm --filter @socio/agents menu:gold"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",
