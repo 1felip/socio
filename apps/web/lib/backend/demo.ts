@@ -145,6 +145,11 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
       );
     },
 
+    async resetDemo() {
+      resetDemoState(state);
+      return { reset: true, merchants: state.merchants.length };
+    },
+
     async askAnalyst(_merchantId, question) {
       // Sem modelo nem banco no demo: respostas prontas com números ilustrativos.
       return demoAnalystAnswer(question);
@@ -235,4 +240,29 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
       };
     },
   };
+}
+
+/**
+ * Restaura a loja demo (cron diário da T10): apaga uploads, aprovações, conversas, ROI,
+ * avaliações sincronizadas e volta o catálogo mock ao seed. Mantém usuários, loja e segredo,
+ * então quem está logado continua logado.
+ */
+export function resetDemoState(
+  state: DemoState,
+  env: Record<string, string | undefined> = process.env,
+): void {
+  const fresh = createDemoState(env);
+  const reviewsFor = Object.fromEntries(
+    state.merchants.map((m) => [
+      m.id,
+      { storeName: m.name, tone: 'acolhedor e direto', examples: [] },
+    ]),
+  );
+  state.uploads = fresh.uploads;
+  state.runs = fresh.runs;
+  state.approvalStore = fresh.approvalStore;
+  state.conversationStore = fresh.conversationStore;
+  state.roi = fresh.roi;
+  state.reviews = new MemoryReviewSyncStore(reviewsFor);
+  state.ifood = fresh.ifood;
 }

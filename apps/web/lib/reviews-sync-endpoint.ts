@@ -9,6 +9,7 @@
 import { CostLimitError } from '@socio/llm';
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, verifySignature } from './agent-auth.ts';
 import type { Backend } from './backend/types.ts';
+import { limitByIp, type RateLimiter, rateLimitMessage } from './rate-limit.ts';
 
 export const MAX_SYNC_BODY_BYTES = 1024;
 
@@ -22,6 +23,8 @@ export interface ReviewsSyncDeps {
   backend: Backend;
   env?: Env;
   now?: () => Date;
+  /** Rate limit por IP do caminho do painel (testes injetam o seu). */
+  limiter?: RateLimiter;
 }
 
 export async function handleReviewsSyncPost(
@@ -60,6 +63,11 @@ export async function handleReviewsSyncPost(
   }
 
   if (signature === null) {
+    const rate = limitByIp(req.headers, 'model', {
+      env,
+      ...(deps.limiter ? { limiter: deps.limiter } : {}),
+    });
+    if (!rate.ok) return error(429, rateLimitMessage(rate.retryAfter));
     const user = await deps.backend.currentUser();
     if (!user) return error(401, 'Faça login.');
     const merchants = await deps.backend.merchantsFor(user.id);

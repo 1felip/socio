@@ -2,9 +2,11 @@
 
 import type { AnalystAnswer } from '@socio/agents';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { askAnalystQuestion, decide, submitDraft, uploadMenuPhoto } from '@/lib/flows';
+import { limitByIp, rateLimitMessage } from '@/lib/rate-limit';
+import { readSampleMenu } from '@/lib/sample-menu';
 import { getBackend, MERCHANT_COOKIE, requireContext, requireMerchant } from '@/lib/session';
 
 export interface FormState {
@@ -39,6 +41,8 @@ export async function selectMerchantAction(form: FormData): Promise<void> {
 
 export async function uploadMenuAction(_prev: FormState, form: FormData): Promise<FormState> {
   const { backend, user, merchant } = await requireMerchant();
+  const rate = limitByIp(await headers(), 'upload');
+  if (!rate.ok) return { error: rateLimitMessage(rate.retryAfter) };
   const file = form.get('photo');
   if (!(file instanceof File) || file.size === 0) return { error: 'Escolha uma foto do cardápio.' };
   const data = new Uint8Array(await file.arrayBuffer());
@@ -97,10 +101,27 @@ export async function askAnalystAction(
   form: FormData,
 ): Promise<AnalystFormState> {
   const { backend, user, merchant } = await requireMerchant();
+  const rate = limitByIp(await headers(), 'model');
+  if (!rate.ok) return { error: rateLimitMessage(rate.retryAfter) };
   const question = String(form.get('question') ?? '');
   const res = await askAnalystQuestion(backend, user, merchant.id, question);
   if (!res.ok) return { error: res.error };
   // Linhas cruas ficam no servidor: o painel só precisa da resposta e do gráfico.
   const { rows: _rows, error: _error, ...result } = res.value;
   return { result: { ...result, rows: [], columns: [] } };
+}
+
+/** Botão "usar foto de exemplo": mesmo fluxo do upload, com a foto versionada em public/samples. */
+export async function sampleMenuAction(_prev: FormState, _form: FormData): Promise<FormState> {
+  const { backend, user, merchant } = await requireMerchant();
+  const rate = limitByIp(await headers(), 'upload');
+  if (!rate.ok) return { error: rateLimitMessage(rate.retryAfter) };
+  const data = readSampleMenu();
+  if (!data) return { error: 'A foto de exemplo não está disponível agora.' };
+  const res = await uploadMenuPhoto(backend, user, merchant.id, data);
+  if (!res.ok) return { error: res.error };
+  if (res.value.status !== 'drafted') {
+    return { error: res.value.error ?? 'Não consegui ler a foto de exemplo. Tente de novo.' };
+  }
+  redirect(`/cardapio/${res.value.uploadId}`);
 }

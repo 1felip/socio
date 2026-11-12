@@ -30,6 +30,16 @@ import type { Backend, CookieJar, MenuUpload, MerchantRef, UploadStatus } from '
 
 export const MENU_BUCKET = 'menu-photos';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Lojas que o cron da demo pode limpar (DEMO_MERCHANT_IDS, uuids separados por vírgula). */
+export function demoMerchantIds(env: Record<string, string | undefined> = process.env): string[] {
+  return (env.DEMO_MERCHANT_IDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => UUID.test(s));
+}
+
 /** Conexão do Analista (role analyst_ro), uma por processo. */
 let analystDb: AnalystDb | null | undefined;
 
@@ -133,6 +143,23 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
         },
         merchantId,
       );
+    },
+
+    async resetDemo() {
+      const ids = demoMerchantIds();
+      if (ids.length === 0) return { reset: false, merchants: 0 };
+      // Ordem respeita as FKs: respostas e ROI apontam para aprovações.
+      for (const table of [
+        'review_replies',
+        'roi_events',
+        'approvals',
+        'menu_uploads',
+        'conversations',
+      ] as const) {
+        const { error } = await admin().from(table).delete().in('merchant_id', ids);
+        if (error) throw new Error(`reset demo: ${table}: ${error.message}`);
+      }
+      return { reset: true, merchants: ids.length };
     },
 
     async askAnalyst(merchantId, question) {

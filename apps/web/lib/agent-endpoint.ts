@@ -15,6 +15,7 @@ import {
 } from '@socio/agents';
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, verifySignature } from './agent-auth.ts';
 import type { Backend } from './backend/types.ts';
+import { limitByIp, type RateLimiter, rateLimitMessage } from './rate-limit.ts';
 
 export const MAX_BODY_BYTES = 16 * 1024;
 
@@ -30,6 +31,8 @@ export interface AgentEndpointDeps {
   now?: () => Date;
   /** Testes injetam handlers e tetos. */
   orchestrator?: Partial<Pick<OrchestratorDeps, 'handlers' | 'limits'>>;
+  /** Rate limit por IP do caminho do painel (testes injetam o seu). */
+  limiter?: RateLimiter;
 }
 
 export async function handleAgentPost(req: Request, deps: AgentEndpointDeps): Promise<Response> {
@@ -63,6 +66,12 @@ export async function handleAgentPost(req: Request, deps: AgentEndpointDeps): Pr
     });
     if (!check.ok) return error(401, 'Assinatura inválida.');
   } else {
+    // n8n assinado não passa aqui: o limite é para quem chega pelo navegador.
+    const rate = limitByIp(req.headers, 'model', {
+      env,
+      ...(deps.limiter ? { limiter: deps.limiter } : {}),
+    });
+    if (!rate.ok) return error(429, rateLimitMessage(rate.retryAfter));
     const user = await deps.backend.currentUser();
     if (!user) return error(401, 'Faça login.');
     const merchants = await deps.backend.merchantsFor(user.id);

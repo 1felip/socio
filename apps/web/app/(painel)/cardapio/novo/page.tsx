@@ -1,4 +1,6 @@
+import { hasSampleMenu } from '@/lib/sample-menu';
 import { requireMerchant } from '@/lib/session';
+import { SampleButton } from './sample-button';
 import { UploadForm } from './upload-form';
 
 export default async function NewMenuPage() {
@@ -12,6 +14,12 @@ export default async function NewMenuPage() {
         </p>
       </div>
       <UploadForm />
+      {hasSampleMenu() && (
+        <div className="space-y-1 border-t border-input pt-4">
+          <p className="text-sm text-muted-foreground">Sem cardápio à mão?</p>
+          <SampleButton />
+        </div>
+      )}
       {backend.mode === 'demo' && (
         <p className="text-xs text-muted-foreground">
           No modo demonstração qualquer foto gera o mesmo rascunho de exemplo.

@@ -108,4 +108,10 @@ export interface Backend {
   askAnalyst(merchantId: string, question: string): Promise<AnalystAnswer>;
 
   monthStats(merchantId: string, now: Date): Promise<MonthStats>;
+
+  /**
+   * Restaura as lojas demo (cron diário). demo: zera o estado em memória; supabase: apaga
+   * aprovações, uploads, conversas, respostas e ROI das lojas em DEMO_MERCHANT_IDS.
+   */
+  resetDemo(): Promise<{ reset: boolean; merchants: number }>;
 }
