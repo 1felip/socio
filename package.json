@@ -17,7 +17,8 @@
     "eval:quick": "node -e \"console.log('eval:quick: nenhuma suíte ainda (placeholder)')\"",
     "db:types": "supabase gen types typescript --linked --schema public > packages/db/src/database.types.ts",
     "seed": "pnpm --filter seed seed",
-    "llm:smoke": "pnpm --filter @socio/llm smoke"
+    "llm:smoke": "pnpm --filter @socio/llm smoke",
+    "eval:reviews": "pnpm --filter @socio/agents eval:reviews"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

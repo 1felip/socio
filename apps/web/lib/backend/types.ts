@@ -2,7 +2,9 @@ import type {
   ApprovalService,
   ConversationStore,
   createCatalogPublisher,
+  createReviewReplyPublisher,
   MenuDraft,
+  ReviewSyncResult,
 } from '@socio/agents';
 
 export type BackendMode = 'demo' | 'supabase';
@@ -69,6 +71,7 @@ export interface CookieOptions {
 }
 
 export type CatalogPublisher = ReturnType<typeof createCatalogPublisher>;
+export type ReviewReplyPublisher = ReturnType<typeof createReviewReplyPublisher>;
 
 /**
  * Tudo que o painel precisa do mundo lá fora. Duas implementações:
@@ -95,6 +98,10 @@ export interface Backend {
   /** Memória curta do orquestrador (POST /api/agent). */
   readonly conversations: ConversationStore;
   readonly publisher: CatalogPublisher;
+  /** Publica resposta de avaliação aprovada (kind review.reply). */
+  readonly reviewPublisher: ReviewReplyPublisher;
+  /** Agente Avaliações sobre as avaliações novas: só cria aprovações e alertas. */
+  syncReviews(merchantId: string): Promise<ReviewSyncResult>;
 
   monthStats(merchantId: string, now: Date): Promise<MonthStats>;
 }

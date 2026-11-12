@@ -11,6 +11,8 @@ import {
   CATALOG_PUBLISH,
   CatalogPublishError,
   proposeCatalogPublish,
+  REVIEW_REPLY,
+  ReviewReplyError,
 } from '@socio/agents';
 import type { Backend, MenuImage, MerchantRef, SessionUser } from './backend/types.ts';
 import { buildPublishPayload } from './review-form.ts';
@@ -115,20 +117,30 @@ export async function decide(
     if (decision === 'reject') return ok({ approval: await backend.approvals.reject(d) });
 
     // Só aprova o que o painel sabe executar: o token não pode se perder.
-    if (current.kind !== CATALOG_PUBLISH) {
+    if (current.kind !== CATALOG_PUBLISH && current.kind !== REVIEW_REPLY) {
       return fail('Este tipo de aprovação ainda é feito pelo WhatsApp.');
     }
     const { approval, token } = await backend.approvals.approve(d);
-    const result = await backend.publisher.publish({
+    const input = {
       merchantId,
       approvalId: approval.id,
       approvalToken: token,
       payload: approval.payload,
-    });
+    };
+    if (approval.kind === REVIEW_REPLY) {
+      await backend.reviewPublisher.publish(input);
+      const done = (await backend.approvals.get(approval.id, merchantId)) ?? approval;
+      return ok({ approval: done });
+    }
+    const result = await backend.publisher.publish(input);
     const done = (await backend.approvals.get(approval.id, merchantId)) ?? approval;
     return ok({ approval: done, itemsPublished: result.itemsPublished });
   } catch (err) {
-    if (err instanceof ApprovalError || err instanceof CatalogPublishError) {
+    if (
+      err instanceof ApprovalError ||
+      err instanceof CatalogPublishError ||
+      err instanceof ReviewReplyError
+    ) {
       return fail(err.message);
     }
     return fail('Deu um problema ao publicar. Confere a fila de aprovações e tenta de novo.');

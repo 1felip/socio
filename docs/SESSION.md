@@ -1,12 +1,13 @@
 # Handoff
-Última tarefa: T13 MCP server ifood-parceiro (done)
-O que mudou: packages/mcp-ifood/src/{context,tools,stdio,http}.ts (7 tools sobre IfoodClient/approvals/publisher; demo|supabase via SOCIO_BACKEND);
-docs/mcp.md (Claude Desktop, Claude Code, HTTP, Inspector); D15. Deps: @modelcontextprotocol/sdk 1.32.2 (v1), tsx (dev).
-Atenção na próxima: rodar o server só via tsx (pacotes têm imports sem extensão; Node puro falha). Inspector:
-`npx @modelcontextprotocol/inspector --cli node packages/mcp-ifood/node_modules/tsx/dist/cli.mjs packages/mcp-ifood/src/stdio.ts --method tools/list`.
-catalog_publish publica só com confirmação do dono por elicitation (sem token no modelo); no HTTP stateless não publica.
-Env novas (SOCIO_MCP_MERCHANT_ID, SOCIO_MCP_OWNER_USER_ID, SOCIO_MCP_HTTP_TOKEN/HOST/PORT) não foram ao .env.example (regra bloqueia o arquivo): adicionar à mão.
-reviews_reply_draft só cria aprovação (publicar resposta = T14); analytics_query = resumo fixo até T15. Modo supabase do MCP só compila (testar após T00).
+Última tarefa: T14 Agente Avaliações (doing — código pronto, falta o eval real que precisa de chave)
+O que mudou: packages/agents/src/reviews/{schema,pipeline,reply,sync,supabase-store,fixtures}.ts + reviews.test.ts; prompts/reviews/{classify,reply,judge}.v1.md;
+apps/web: POST /api/reviews/sync (lib/reviews-sync-endpoint.ts, HMAC n8n ou sessão de membro), Backend.syncReviews/reviewPublisher (demo sem modelo, supabase com SupabaseReviewSyncStore),
+painel aprova e publica review.reply (flows.ts). Eval: evals/datasets/reviews/{index,seed,manual}.json (80 da T03 via `pnpm --filter seed reviews:dataset` + 20 à mão),
+`pnpm eval:reviews` (packages/agents/scripts/eval-reviews.ts; LLM_FAKE=1 só testa o encanamento). D16.
+Estado: pnpm check verde (270 testes). Falta: `pnpm eval:reviews` real pelo eval-runner (metas: causa ≥ 85%, juiz ≥ 4, injeção 100%) depois da T00 → então /done.
+Atenção: o orquestrador ainda responde "chegando" para a intenção avaliacoes (handler pode chamar syncReviews/listar pendentes; não é item da T14).
+Revisão de segurança da T14 feita: sem achado alto; médios corrigidos. Para a T21: cooldown do sync pelo painel, checagem de Origin, segredo n8n por loja.
 Herdado: T02, T05, T06 doing esperando T00 (.env) e a foto evals/datasets/menus/samples/exemplo-1.jpg; proxy.ts da T08 pendente.
+Env SOCIO_MCP_* (T13) ainda fora do .env.example: adicionar à mão.
 Fora dos commits: CLAUDE.md, README.md, tsbuildinfo, apps/web/AGENTS.md, next-env.d.ts, evals/reports/.
-Próxima tarefa sugerida: T02 Banco Supabase: schema, RLS e tipos (bloqueada por T00 Contas e chaves).
+Prazo: T11 (inscrição) vence 17/11 e depende de T09 e T10 (ambas AMBOS).

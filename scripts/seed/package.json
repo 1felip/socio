@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "seed": "node src/index.ts",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "reviews:dataset": "node src/reviews-dataset.ts"
   },
   "dependencies": {
     "@socio/db": "workspace:*"

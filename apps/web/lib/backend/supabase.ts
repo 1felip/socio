@@ -9,12 +9,15 @@ import { randomUUID } from 'node:crypto';
 import {
   createApprovalService,
   createCatalogPublisher,
+  createReviewReplyPublisher,
   extractMenu,
   MenuDraft,
   MenuReadError,
   SupabaseApprovalStore,
   SupabaseConversationStore,
+  SupabaseReviewSyncStore,
   SupabaseRoiStore,
+  syncReviews,
 } from '@socio/agents';
 import { createServerClient, createServiceClient, type DbClient } from '@socio/db';
 import { getIfoodClient, type IfoodClient } from '@socio/ifood-client';
@@ -89,6 +92,12 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
     roi: new SupabaseRoiStore(admin()),
     resolveIfoodMerchantId,
   });
+  const reviewPublisher = createReviewReplyPublisher({
+    approvals,
+    ifood,
+    roi: new SupabaseRoiStore(admin()),
+    resolveIfoodMerchantId,
+  });
 
   return {
     mode: 'supabase',
@@ -97,6 +106,19 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
     },
     approvals,
     publisher,
+    reviewPublisher,
+
+    syncReviews(merchantId) {
+      return syncReviews(
+        {
+          ifood,
+          approvals,
+          store: new SupabaseReviewSyncStore(admin()),
+          resolveIfoodMerchantId,
+        },
+        merchantId,
+      );
+    },
 
     async currentUser() {
       const { data } = await user.auth.getUser();

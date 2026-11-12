@@ -8,7 +8,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
-    "menu:extract": "node --env-file-if-exists=../../.env scripts/menu-extract.ts"
+    "menu:extract": "node --env-file-if-exists=../../.env scripts/menu-extract.ts",
+    "eval:reviews": "node --env-file-if-exists=../../.env scripts/eval-reviews.ts"
   },
   "dependencies": {
     "@socio/db": "workspace:*",

@@ -7,9 +7,13 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import {
   createApprovalService,
   createCatalogPublisher,
+  createReviewReplyPublisher,
+  demoAnalyzeReview,
   MemoryApprovalStore,
   MemoryConversationStore,
+  MemoryReviewSyncStore,
   MemoryRoiStore,
+  syncReviews,
 } from '@socio/agents';
 import {
   createMemoryStore,
@@ -46,6 +50,7 @@ export interface DemoState {
   approvalStore: MemoryApprovalStore;
   conversationStore: MemoryConversationStore;
   roi: MemoryRoiStore;
+  reviews: MemoryReviewSyncStore;
   ifood: IfoodClient;
   secret: string;
 }
@@ -69,6 +74,13 @@ export function createDemoState(env: Record<string, string | undefined> = proces
     approvalStore: new MemoryApprovalStore(),
     conversationStore: new MemoryConversationStore(),
     roi: new MemoryRoiStore(),
+    reviews: new MemoryReviewSyncStore({
+      [merchantId]: {
+        storeName: 'Pizzaria Forno da Vila',
+        tone: 'acolhedor e direto',
+        examples: [],
+      },
+    }),
     ifood: new MockIfoodClient(createMemoryStore(demoSeed)),
     secret: env.SESSION_SECRET || randomBytes(32).toString('hex'),
   };
@@ -98,6 +110,12 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
     roi: state.roi,
     resolveIfoodMerchantId,
   });
+  const reviewPublisher = createReviewReplyPublisher({
+    approvals,
+    ifood: state.ifood,
+    roi: state.roi,
+    resolveIfoodMerchantId,
+  });
 
   const publicUpload = (u: MenuUpload & { photo: Uint8Array }): MenuUpload => {
     const { photo: _photo, ...rest } = u;
@@ -109,6 +127,22 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
     conversations: state.conversationStore,
     approvals,
     publisher,
+    reviewPublisher,
+
+    syncReviews(merchantId) {
+      // Sem modelo no demo: classificação por palavra-chave e resposta no modelo seguro.
+      return syncReviews(
+        {
+          ifood: state.ifood,
+          approvals,
+          store: state.reviews,
+          resolveIfoodMerchantId,
+          analyze: demoAnalyzeReview,
+          lookbackDays: null,
+        },
+        merchantId,
+      );
+    },
 
     async currentUser() {
       const id = unsign(jar.get(DEMO_SESSION_COOKIE), state.secret);
