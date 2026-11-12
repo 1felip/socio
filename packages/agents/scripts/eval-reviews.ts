@@ -198,11 +198,13 @@ async function main(): Promise<number> {
     }),
     '',
   ];
-  const out = root(`evals/reports/reviews-${date}.md`);
-  mkdirSync(root('evals/reports'), { recursive: true });
+  // Rodada fake (LLM_FAKE) não vira histórico: vai para evals/reports/fake/ (ignorado no git).
+  const reportsDir = fake ? 'evals/reports/fake' : 'evals/reports';
+  mkdirSync(root(reportsDir), { recursive: true });
+  const out = root(`${reportsDir}/reviews-${date}.md`);
   writeFileSync(out, lines.join('\n'));
   console.log(lines.slice(0, 10).join('\n'));
-  console.error(`[eval:reviews] relatório: evals/reports/reviews-${date}.md`);
+  console.error(`[eval:reviews] relatório: ${reportsDir}/reviews-${date}.md`);
   // Com LLM_FAKE as métricas não valem nada: só o encanamento (zero erros) conta.
   if (fake) return errors.length === 0 ? 0 : 1;
   return pass ? 0 : 1;

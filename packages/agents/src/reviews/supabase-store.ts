@@ -8,7 +8,10 @@ import type { StoreVoice } from './schema.ts';
 import type { ReviewSyncStore, SavedReview } from './sync.ts';
 
 export class SupabaseReviewSyncStore implements ReviewSyncStore {
-  constructor(private readonly db: DbClient) {}
+  private readonly db: DbClient;
+  constructor(db: DbClient) {
+    this.db = db;
+  }
 
   async processed(merchantId: string, reviewIds: readonly string[]): Promise<Set<string>> {
     if (reviewIds.length === 0) return new Set();

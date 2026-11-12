@@ -19,3 +19,6 @@ evals/reports/*.html
 
 # Artefatos do Playwright MCP (ui-tester)
 .playwright-mcp/
+
+# Rodadas de eval com LLM_FAKE (sem valor)
+evals/reports/fake/

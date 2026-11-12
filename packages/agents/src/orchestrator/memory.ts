@@ -87,7 +87,10 @@ export class MemoryConversationStore implements ConversationStore {
  * um turno do histórico curto. Aceitável para memória de contexto; nada de negócio depende.
  */
 export class SupabaseConversationStore implements ConversationStore {
-  constructor(private readonly db: DbClient) {}
+  private readonly db: DbClient;
+  constructor(db: DbClient) {
+    this.db = db;
+  }
 
   async open(key: ConversationKey): Promise<Conversation> {
     let q = this.db

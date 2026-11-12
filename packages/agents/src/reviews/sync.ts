@@ -39,7 +39,10 @@ export interface ReviewSyncStore {
 
 export class MemoryReviewSyncStore implements ReviewSyncStore {
   readonly saved = new Map<string, SavedReview[]>();
-  constructor(private readonly voices: Record<string, StoreVoice> = {}) {}
+  private readonly voices: Record<string, StoreVoice>;
+  constructor(voices: Record<string, StoreVoice> = {}) {
+    this.voices = voices;
+  }
 
   async processed(merchantId: string, reviewIds: readonly string[]): Promise<Set<string>> {
     const done = new Set((this.saved.get(merchantId) ?? []).map((s) => s.review.id));

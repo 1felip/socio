@@ -106,7 +106,29 @@ export async function extractMenu(
   const itemCount = extraction.categories.reduce((n, c) => n + c.items.length, 0);
   if (!extraction.is_menu || itemCount === 0) throw new MenuReadError(extraction.notes ?? '');
 
-  const step2 = await generateObject({
+  const step2 = await refineExtraction(extraction, opts, refinePrompt);
+
+  return {
+    draft: step2.draft,
+    extraction,
+    costUsd: step1.costUsd + step2.costUsd,
+    prompts: { extract: extractPrompt.id, refine: refinePrompt.id },
+  };
+}
+
+/**
+ * Etapa 2 sozinha: transcrição (texto da foto, não confiável) → rascunho.
+ * Exposta para o eval de injeção testar texto malicioso "escrito na foto" sem precisar de imagem.
+ */
+export async function refineExtraction(
+  extraction: MenuExtraction,
+  opts: ExtractMenuOptions,
+  prompt?: ReturnType<typeof loadPrompt>,
+): Promise<{ draft: MenuDraft; costUsd: number }> {
+  const v = opts.promptVersions ?? {};
+  const refinePrompt =
+    prompt ?? loadPrompt(MENU_AGENT, 'refine', v.refine ? { version: v.refine } : {});
+  const res = await generateObject({
     ...promptCall(refinePrompt),
     ctx: ctxFor(opts, 'refine', refinePrompt),
     schema: MenuRefinement,
@@ -114,13 +136,7 @@ export async function extractMenu(
     maxOutputTokens: 8000,
     prompt: untrusted('menu_extraction', JSON.stringify(indexed(extraction), null, 1)),
   });
-
-  return {
-    draft: buildDraft(extraction, step2.object),
-    extraction,
-    costUsd: step1.costUsd + step2.costUsd,
-    prompts: { extract: extractPrompt.id, refine: refinePrompt.id },
-  };
+  return { draft: buildDraft(extraction, res.object), costUsd: res.costUsd };
 }
 
 /** O que vai para a etapa 2: só o necessário, com índices explícitos. */

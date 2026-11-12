@@ -12,7 +12,8 @@
     "eval:reviews": "node --env-file-if-exists=../../.env scripts/eval-reviews.ts",
     "eval:analyst": "node --env-file-if-exists=../../.env scripts/eval-analyst.ts",
     "eval:menu": "node --env-file-if-exists=../../.env scripts/eval-menu.ts",
-    "menu:gold": "node --env-file-if-exists=../../.env scripts/menu-gold.ts"
+    "menu:gold": "node --env-file-if-exists=../../.env scripts/menu-gold.ts",
+    "eval:injection": "node --env-file-if-exists=../../.env scripts/eval-injection.ts"
   },
   "dependencies": {
     "@socio/db": "workspace:*",

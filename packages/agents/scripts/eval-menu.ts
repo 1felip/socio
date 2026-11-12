@@ -170,8 +170,10 @@ async function main(): Promise<number> {
     '',
   ];
   const report = lines.join('\n');
-  mkdirSync(root('evals/reports'), { recursive: true });
-  const out = root(`evals/reports/menu${quick ? '-quick' : ''}-${date}.md`);
+  // Rodada fake (LLM_FAKE) não vira histórico: vai para evals/reports/fake/ (ignorado no git).
+  const reportsDir = fake ? 'evals/reports/fake' : 'evals/reports';
+  mkdirSync(root(reportsDir), { recursive: true });
+  const out = root(`${reportsDir}/menu${quick ? '-quick' : ''}-${date}.md`);
   writeFileSync(out, report);
   console.log(report);
   console.error(`[eval:${label}] relatório: ${out}`);
