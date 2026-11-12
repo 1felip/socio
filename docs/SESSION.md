@@ -12,4 +12,5 @@ Depois do .env, eu rodo (T20: conferir /custos com uso real, 1 trace público e 
 Atenção: README.md tem mudanças suas não commitadas; README v1 fica para quando houver números. PGlite não respeita statement_timeout. MCP analytics_query ainda é resumo fixo (trocar por askAnalyst).
 T21 herdou: rate limit por loja no Analista, escopo da loja depende do validador (set_config é PUBLIC), cooldown/Origin/segredo por loja do sync (T14).
 Relatórios: reais em evals/reports/ (versionar), fake em evals/reports/fake/ (ignorado). Depois de rodar evals reais: pnpm eval:table.
+T16 (wip): packages/whatsapp + /whatsapp com prova de posse (código SOCIO 123456 mandado do próprio número; confirmWhatsAppFromMessage para a rota da T17), D22. Pendente da revisão: downloadMedia com redirect manual, host exato e leitura limitada por stream; webhook com max() nos ids, from validado, phone_number_id conferido, timestamp inválido. Você: app Meta + WHATSAPP_* no .env → pnpm wa:ping <seu número>.
 Próxima tarefa sem chaves possível: T22 (campanhas, opcional) ou partes de código da T16 (packages/whatsapp com testes, sem número real).

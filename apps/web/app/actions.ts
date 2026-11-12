@@ -4,7 +4,13 @@ import type { AnalystAnswer } from '@socio/agents';
 import { revalidatePath } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { askAnalystQuestion, decide, submitDraft, uploadMenuPhoto } from '@/lib/flows';
+import {
+  askAnalystQuestion,
+  decide,
+  saveWhatsAppPhone,
+  submitDraft,
+  uploadMenuPhoto,
+} from '@/lib/flows';
 import { limitByIp, rateLimitMessage } from '@/lib/rate-limit';
 import { readSampleMenu } from '@/lib/sample-menu';
 import { getBackend, MERCHANT_COOKIE, requireContext, requireMerchant } from '@/lib/session';
@@ -124,4 +130,21 @@ export async function sampleMenuAction(_prev: FormState, _form: FormData): Promi
     return { error: res.value.error ?? 'Não consegui ler a foto de exemplo. Tente de novo.' };
   }
   redirect(`/cardapio/${res.value.uploadId}`);
+}
+
+export interface WhatsAppFormState extends FormState {
+  /** Código para mandar pelo WhatsApp (mostrado uma vez). */
+  code?: string;
+}
+
+export async function saveWhatsAppAction(
+  _prev: WhatsAppFormState,
+  form: FormData,
+): Promise<WhatsAppFormState> {
+  const { backend, user, merchant } = await requireMerchant();
+  const res = await saveWhatsAppPhone(backend, user, merchant.id, String(form.get('phone') ?? ''));
+  if (!res.ok) return { error: res.error };
+  revalidatePath('/whatsapp');
+  if (!res.value.code) return { message: 'Número removido.' };
+  return { message: 'Falta só confirmar.', code: res.value.code };
 }

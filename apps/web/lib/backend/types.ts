@@ -10,6 +10,12 @@ import type {
 
 import type { RunRow } from '../costs.ts';
 
+export interface WhatsAppMember {
+  merchantId: string;
+  userId: string;
+  role: MemberRole;
+}
+
 export type BackendMode = 'demo' | 'supabase';
 
 export interface SessionUser {
@@ -90,6 +96,25 @@ export interface Backend {
   signOut(): Promise<void>;
 
   merchantsFor(userId: string): Promise<MerchantRef[]>;
+
+  /** Canal WhatsApp: número (wa_id) com posse comprovada → membro e loja. null se não. */
+  memberByWhatsApp(waId: string): Promise<WhatsAppMember | null>;
+  whatsAppStatusFor(
+    userId: string,
+    merchantId: string,
+  ): Promise<{ phone: string | null; verified: boolean }>;
+  /** Grava número + hash do código (ou limpa com null). Zera a verificação anterior. */
+  startWhatsAppLink(
+    userId: string,
+    merchantId: string,
+    link: { waId: string; codeHash: string; expiresAt: Date } | null,
+  ): Promise<void>;
+  /** Mensagem do número trouxe o código certo e no prazo → verificado. taken: já é de outro membro. */
+  confirmWhatsAppLink(
+    waId: string,
+    codeHash: string,
+    now: Date,
+  ): Promise<WhatsAppMember | 'taken' | null>;
 
   /** Guarda a foto, roda o Agente Cardápio e salva o rascunho. Não publica nada. */
   createUpload(merchantId: string, userId: string, image: MenuImage): Promise<MenuUpload>;

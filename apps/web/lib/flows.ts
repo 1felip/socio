@@ -15,8 +15,16 @@ import {
   REVIEW_REPLY,
   ReviewReplyError,
 } from '@socio/agents';
-import type { Backend, MenuImage, MerchantRef, SessionUser } from './backend/types.ts';
+import { normalizePhone } from '@socio/whatsapp';
+import type {
+  Backend,
+  MenuImage,
+  MerchantRef,
+  SessionUser,
+  WhatsAppMember,
+} from './backend/types.ts';
 import { buildPublishPayload } from './review-form.ts';
+import { extractLinkCode, LINK_CODE_TTL_MS, linkCodeHash, newLinkCode } from './whatsapp-link.ts';
 
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -167,4 +175,54 @@ export async function askAnalystQuestion(
     console.error('[analyst]', err instanceof Error ? err.message : err);
     return fail('Não consegui montar essa análise agora. Tente de novo em instantes.');
   }
+}
+
+/**
+ * Número de WhatsApp do próprio membro (canal T16). Cada um cadastra o seu; vazio remove.
+ * Devolve o código que o membro precisa mandar DESSE número para provar a posse.
+ */
+export async function saveWhatsAppPhone(
+  backend: Backend,
+  user: SessionUser,
+  merchantId: string,
+  raw: string,
+  now = new Date(),
+): Promise<FlowResult<{ waId: string | null; code: string | null }>> {
+  if (!(await membership(backend, user, merchantId))) return fail('Loja não encontrada.');
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    await backend.startWhatsAppLink(user.id, merchantId, null);
+    return ok({ waId: null, code: null });
+  }
+  const waId = normalizePhone(trimmed);
+  if (!waId) return fail('Número inválido. Use DDD + número, ex.: (11) 98888-7777.');
+  const code = newLinkCode();
+  await backend.startWhatsAppLink(user.id, merchantId, {
+    waId,
+    codeHash: linkCodeHash(waId, code),
+    expiresAt: new Date(now.getTime() + LINK_CODE_TTL_MS),
+  });
+  return ok({ waId, code });
+}
+
+export type WhatsAppLinkOutcome =
+  | { status: 'linked'; member: WhatsAppMember }
+  | { status: 'taken' | 'invalid' | 'not_a_code' };
+
+/**
+ * Mensagem recebida (rota do webhook, T17): se trouxer "SOCIO 123456" válido para o número
+ * de origem, confirma a posse. Resposta ao remetente deve ser genérica (não revelar cadastro).
+ */
+export async function confirmWhatsAppFromMessage(
+  backend: Backend,
+  waId: string,
+  text: string,
+  now = new Date(),
+): Promise<WhatsAppLinkOutcome> {
+  const code = extractLinkCode(text);
+  if (!code) return { status: 'not_a_code' };
+  const r = await backend.confirmWhatsAppLink(waId, linkCodeHash(waId, code), now);
+  if (r === 'taken') return { status: 'taken' };
+  if (!r) return { status: 'invalid' };
+  return { status: 'linked', member: r };
 }

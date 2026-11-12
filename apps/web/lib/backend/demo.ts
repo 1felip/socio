@@ -46,7 +46,15 @@ interface DemoUser {
 export interface DemoState {
   users: DemoUser[];
   merchants: Array<{ id: string; name: string; ifoodMerchantId: string }>;
-  members: Array<{ merchantId: string; userId: string; role: MemberRole }>;
+  members: Array<{
+    merchantId: string;
+    userId: string;
+    role: MemberRole;
+    /** wa_id (E.164 sem +) para o canal WhatsApp. */
+    whatsappPhone?: string | null;
+    whatsappVerifiedAt?: Date | null;
+    whatsappCode?: { hash: string; expiresAt: Date } | null;
+  }>;
   uploads: Map<string, MenuUpload & { photo: Uint8Array }>;
   runs: Array<RunRow & { merchantId: string }>;
   approvalStore: MemoryApprovalStore;
@@ -179,6 +187,41 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
 
     async signOut() {
       jar.delete(DEMO_SESSION_COOKIE);
+    },
+
+    async memberByWhatsApp(waId) {
+      const m = state.members.find((x) => x.whatsappPhone === waId && x.whatsappVerifiedAt);
+      return m ? { merchantId: m.merchantId, userId: m.userId, role: m.role } : null;
+    },
+
+    async whatsAppStatusFor(userId, merchantId) {
+      const m = state.members.find((x) => x.userId === userId && x.merchantId === merchantId);
+      return { phone: m?.whatsappPhone ?? null, verified: Boolean(m?.whatsappVerifiedAt) };
+    },
+
+    async startWhatsAppLink(userId, merchantId, link) {
+      const m = state.members.find((x) => x.userId === userId && x.merchantId === merchantId);
+      if (!m) return;
+      m.whatsappPhone = link?.waId ?? null;
+      m.whatsappVerifiedAt = null;
+      m.whatsappCode = link ? { hash: link.codeHash, expiresAt: link.expiresAt } : null;
+    },
+
+    async confirmWhatsAppLink(waId, codeHash, now) {
+      const m = state.members.find(
+        (x) =>
+          x.whatsappPhone === waId &&
+          !x.whatsappVerifiedAt &&
+          x.whatsappCode?.hash === codeHash &&
+          x.whatsappCode.expiresAt > now,
+      );
+      if (!m) return null;
+      if (state.members.some((x) => x !== m && x.whatsappPhone === waId && x.whatsappVerifiedAt)) {
+        return 'taken';
+      }
+      m.whatsappVerifiedAt = now;
+      m.whatsappCode = null;
+      return { merchantId: m.merchantId, userId: m.userId, role: m.role };
     },
 
     async merchantsFor(userId) {

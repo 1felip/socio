@@ -199,6 +199,9 @@ importers:
       '@socio/llm':
         specifier: workspace:*
         version: link:../../packages/llm
+      '@socio/whatsapp':
+        specifier: workspace:*
+        version: link:../../packages/whatsapp
       '@supabase/ssr':
         specifier: 0.12.7
         version: 0.12.7(@supabase/supabase-js@2.119.0(@opentelemetry/api@1.10.0))
@@ -354,7 +357,11 @@ importers:
         specifier: 4.21.0
         version: 4.21.0
 
-  packages/whatsapp: {}
+  packages/whatsapp:
+    dependencies:
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
 
   scripts/seed:
     dependencies:

@@ -5,7 +5,13 @@ import type { NextConfig } from 'next';
 const promptsDir = fileURLToPath(new URL('../../packages/agents/prompts', import.meta.url));
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@socio/llm', '@socio/agents', '@socio/db', '@socio/ifood-client'],
+  transpilePackages: [
+    '@socio/llm',
+    '@socio/agents',
+    '@socio/db',
+    '@socio/ifood-client',
+    '@socio/whatsapp',
+  ],
   // Parser do Postgres (WASM) e driver do Analista: carregam do node_modules, fora do bundle.
   serverExternalPackages: ['libpg-query', 'postgres'],
   env: { SOCIO_PROMPTS_DIR: process.env.SOCIO_PROMPTS_DIR || promptsDir },

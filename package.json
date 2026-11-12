@@ -23,6 +23,7 @@
     "eval:menu": "pnpm --filter @socio/agents eval:menu",
     "eval:injection": "pnpm --filter @socio/agents eval:injection",
     "eval:table": "node scripts/eval-table.mjs",
+    "wa:ping": "pnpm --filter @socio/whatsapp wa:ping",
     "menu:gold": "pnpm --filter @socio/agents menu:gold"
   },
   "devDependencies": {

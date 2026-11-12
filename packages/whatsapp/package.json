@@ -7,6 +7,10 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "wa:ping": "node --env-file-if-exists=../../.env scripts/wa-ping.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
   }
 }

@@ -30,7 +30,16 @@ export type Database = {
         'name'
       >;
       merchant_members: Table<
-        { merchant_id: Uuid; user_id: Uuid; role: 'owner' | 'staff'; created_at: Timestamp },
+        {
+          merchant_id: Uuid;
+          user_id: Uuid;
+          role: 'owner' | 'staff';
+          whatsapp_phone: string | null;
+          whatsapp_verified_at: Timestamp | null;
+          whatsapp_code_hash: string | null;
+          whatsapp_code_expires_at: Timestamp | null;
+          created_at: Timestamp;
+        },
         'merchant_id' | 'user_id'
       >;
       catalog_items: Table<

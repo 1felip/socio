@@ -198,6 +198,82 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
       await user.auth.signOut();
     },
 
+    async memberByWhatsApp(waId) {
+      // Servidor resolve número → loja (service role): o webhook não tem usuário logado.
+      // Só número com posse comprovada (verified_at) é reconhecido.
+      const { data, error } = await admin()
+        .from('merchant_members')
+        .select('merchant_id, user_id, role')
+        .eq('whatsapp_phone', waId)
+        .not('whatsapp_verified_at', 'is', null)
+        .maybeSingle();
+      if (error) throw new Error(`merchant_members: ${error.message}`);
+      return data
+        ? {
+            merchantId: data.merchant_id,
+            userId: data.user_id,
+            role: data.role === 'owner' ? 'owner' : 'staff',
+          }
+        : null;
+    },
+
+    async whatsAppStatusFor(userId, merchantId) {
+      const { data, error } = await user
+        .from('merchant_members')
+        .select('whatsapp_phone, whatsapp_verified_at')
+        .eq('user_id', userId)
+        .eq('merchant_id', merchantId)
+        .maybeSingle();
+      if (error) throw new Error(`merchant_members: ${error.message}`);
+      return { phone: data?.whatsapp_phone ?? null, verified: Boolean(data?.whatsapp_verified_at) };
+    },
+
+    async startWhatsAppLink(userId, merchantId, link) {
+      // Painel não tem UPDATE em merchant_members: service role, depois de flows conferir o membro.
+      const { error } = await admin()
+        .from('merchant_members')
+        .update({
+          whatsapp_phone: link?.waId ?? null,
+          whatsapp_verified_at: null,
+          whatsapp_code_hash: link?.codeHash ?? null,
+          whatsapp_code_expires_at: link?.expiresAt.toISOString() ?? null,
+        })
+        .eq('user_id', userId)
+        .eq('merchant_id', merchantId);
+      if (error) throw new Error(`merchant_members: ${error.message}`);
+    },
+
+    async confirmWhatsAppLink(waId, codeHash, now) {
+      const { data, error } = await admin()
+        .from('merchant_members')
+        .select('merchant_id, user_id, role')
+        .eq('whatsapp_phone', waId)
+        .eq('whatsapp_code_hash', codeHash)
+        .is('whatsapp_verified_at', null)
+        .gt('whatsapp_code_expires_at', now.toISOString())
+        .maybeSingle();
+      if (error) throw new Error(`merchant_members: ${error.message}`);
+      if (!data) return null;
+      const upd = await admin()
+        .from('merchant_members')
+        .update({
+          whatsapp_verified_at: now.toISOString(),
+          whatsapp_code_hash: null,
+          whatsapp_code_expires_at: null,
+        })
+        .eq('user_id', data.user_id)
+        .eq('merchant_id', data.merchant_id)
+        .is('whatsapp_verified_at', null);
+      // Índice único entre verificados: o número já é de outro membro.
+      if (upd.error?.code === '23505') return 'taken';
+      if (upd.error) throw new Error(`merchant_members: ${upd.error.message}`);
+      return {
+        merchantId: data.merchant_id,
+        userId: data.user_id,
+        role: data.role === 'owner' ? 'owner' : 'staff',
+      };
+    },
+
     async merchantsFor(userId) {
       // Duas consultas: os tipos escritos à mão ainda não declaram a relação (até `pnpm db:types`).
       const members = await user
