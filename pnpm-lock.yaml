@@ -174,7 +174,7 @@ importers:
         version: 26.6.6
       promptfoo:
         specifier: 0.125.1
-        version: 0.125.1(@aws-sdk/credential-provider-node@3.972.94)(@aws-sdk/credential-providers@3.1164.0)(@electric-sql/pglite@0.5.16)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(@types/json-schema@7.0.15)(@types/node@26.6.6)(pg@8.23.1)(socks@2.8.10)
+        version: 0.125.1(@aws-sdk/credential-provider-node@3.972.94)(@aws-sdk/credential-providers@3.1164.0)(@electric-sql/pglite@0.5.16)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(@types/json-schema@7.0.15)(@types/node@26.6.6)(pg@8.23.1)(postgres@3.4.9)(socks@2.8.10)
       supabase:
         specifier: 3.0.0
         version: 3.0.0
@@ -211,12 +211,18 @@ importers:
       clsx:
         specifier: 2.1.1
         version: 2.1.1
+      libpg-query:
+        specifier: 17.7.4
+        version: 17.7.4
       lucide-react:
         specifier: 1.70.0
         version: 1.70.0(@types/react@19.3.0)(react@19.3.1)
       next:
         specifier: 16.4.5
         version: 16.4.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -257,6 +263,12 @@ importers:
       '@socio/llm':
         specifier: workspace:*
         version: link:../llm
+      libpg-query:
+        specifier: 17.7.4
+        version: 17.7.4
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -1666,6 +1678,9 @@ packages:
 
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
+
+  '@pgsql/types@17.6.2':
+    resolution: {integrity: sha512-1UtbELdbqNdyOShhrVfSz3a1gDi0s9XXiQemx+6QqtsrXe62a6zOGU+vjb2GRfG5jeEokI1zBBcfD42enRv0Rw==}
 
   '@posthog/core@1.23.1':
     resolution: {integrity: sha512-GViD5mOv/mcbZcyzz3z9CS0R79JzxVaqEz4sP5Dsea178M/j3ZWe6gaHDZB9yuyGfcmIMQ/8K14yv+7QrK4sQQ==}
@@ -3160,6 +3175,9 @@ packages:
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
+  libpg-query@17.7.4:
+    resolution: {integrity: sha512-hTV3LvacQgJhc6GHpu5GYZMQBOAEpJ/LF1JjkixZ8YLh2TtbuN8y0JlNiPTe8PBTV9ChFkKcZMWSYKyhJfkYaQ==}
+
   libsql@0.5.29:
     resolution: {integrity: sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg==}
     cpu: [x64, arm64, wasm32, arm]
@@ -3657,6 +3675,10 @@ packages:
   postgres-interval@1.2.0:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
+
+  postgres@3.4.9:
+    resolution: {integrity: sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw==}
+    engines: {node: '>=12'}
 
   posthog-node@5.24.17:
     resolution: {integrity: sha512-mdb8TKt+YCRbGQdYar3AKNUPCyEiqcprScF4unYpGALF6HlBaEuO6wPuIqXXpCWkw4VclJYCKbb6lq6pH6bJeA==}
@@ -5751,6 +5773,8 @@ snapshots:
 
   '@oxc-project/types@0.156.0': {}
 
+  '@pgsql/types@17.6.2': {}
+
   '@posthog/core@1.23.1':
     dependencies:
       cross-spawn: 7.0.6
@@ -6500,12 +6524,13 @@ snapshots:
   dotenv@17.4.2:
     optional: true
 
-  drizzle-orm@0.45.4(@electric-sql/pglite@0.5.16)(@libsql/client@0.18.0)(@opentelemetry/api@1.10.0)(pg@8.23.1):
+  drizzle-orm@0.45.4(@electric-sql/pglite@0.5.16)(@libsql/client@0.18.0)(@opentelemetry/api@1.10.0)(pg@8.23.1)(postgres@3.4.9):
     optionalDependencies:
       '@electric-sql/pglite': 0.5.16
       '@libsql/client': 0.18.0
       '@opentelemetry/api': 1.10.0
       pg: 8.23.1
+      postgres: 3.4.9
 
   dunder-proto@1.0.1:
     dependencies:
@@ -7072,6 +7097,10 @@ snapshots:
 
   kuler@2.0.0: {}
 
+  libpg-query@17.7.4:
+    dependencies:
+      '@pgsql/types': 17.6.2
+
   libsql@0.5.29:
     dependencies:
       '@neon-rs/load': 0.0.4
@@ -7568,6 +7597,8 @@ snapshots:
       xtend: 4.0.2
     optional: true
 
+  postgres@3.4.9: {}
+
   posthog-node@5.24.17:
     dependencies:
       '@posthog/core': 1.23.1
@@ -7577,7 +7608,7 @@ snapshots:
 
   promise-limit@2.7.0: {}
 
-  promptfoo@0.125.1(@aws-sdk/credential-provider-node@3.972.94)(@aws-sdk/credential-providers@3.1164.0)(@electric-sql/pglite@0.5.16)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(@types/json-schema@7.0.15)(@types/node@26.6.6)(pg@8.23.1)(socks@2.8.10):
+  promptfoo@0.125.1(@aws-sdk/credential-provider-node@3.972.94)(@aws-sdk/credential-providers@3.1164.0)(@electric-sql/pglite@0.5.16)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(@types/json-schema@7.0.15)(@types/node@26.6.6)(pg@8.23.1)(postgres@3.4.9)(socks@2.8.10):
     dependencies:
       '@anthropic-ai/sdk': 0.133.0(zod@4.6.7)
       '@apidevtools/json-schema-ref-parser': 16.0.6(@types/json-schema@7.0.15)
@@ -7613,7 +7644,7 @@ snapshots:
       csv-parse: 7.0.3
       csv-stringify: 6.9.0
       dedent: 1.7.2
-      drizzle-orm: 0.45.4(@electric-sql/pglite@0.5.16)(@libsql/client@0.18.0)(@opentelemetry/api@1.10.0)(pg@8.23.1)
+      drizzle-orm: 0.45.4(@electric-sql/pglite@0.5.16)(@libsql/client@0.18.0)(@opentelemetry/api@1.10.0)(pg@8.23.1)(postgres@3.4.9)
       express: 5.3.0
       exsolve: 1.2.0
       fast-deep-equal: 3.1.3

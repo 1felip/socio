@@ -8,6 +8,7 @@ import {
   createApprovalService,
   createCatalogPublisher,
   createReviewReplyPublisher,
+  demoAnalystAnswer,
   demoAnalyzeReview,
   MemoryApprovalStore,
   MemoryConversationStore,
@@ -142,6 +143,11 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
         },
         merchantId,
       );
+    },
+
+    async askAnalyst(_merchantId, question) {
+      // Sem modelo nem banco no demo: respostas prontas com números ilustrativos.
+      return demoAnalystAnswer(question);
     },
 
     async currentUser() {

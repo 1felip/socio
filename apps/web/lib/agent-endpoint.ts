@@ -7,7 +7,12 @@
  * - painel: sessão. O usuário precisa ser membro da loja; canal vira `panel` e a conversa
  *   é a do próprio usuário.
  */
-import { createOrchestrator, InvalidAgentRequest, type OrchestratorDeps } from '@socio/agents';
+import {
+  analystIntentHandler,
+  createOrchestrator,
+  InvalidAgentRequest,
+  type OrchestratorDeps,
+} from '@socio/agents';
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, verifySignature } from './agent-auth.ts';
 import type { Backend } from './backend/types.ts';
 
@@ -72,6 +77,12 @@ export async function handleAgentPost(req: Request, deps: AgentEndpointDeps): Pr
     conversations: deps.backend.conversations,
     ...(deps.now ? { now: deps.now } : {}),
     ...deps.orchestrator,
+    handlers: {
+      analista: analystIntentHandler((merchantId, question) =>
+        deps.backend.askAnalyst(merchantId, question),
+      ),
+      ...deps.orchestrator?.handlers,
+    },
   });
   try {
     return Response.json(await orchestrator.handle(input));

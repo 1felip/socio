@@ -9,6 +9,7 @@ const NAV = [
   { href: '/', label: 'Início' },
   { href: '/cardapio/novo', label: 'Novo cardápio' },
   { href: '/aprovacoes', label: 'Aprovações' },
+  { href: '/analista', label: 'Analista' },
 ];
 
 export default async function PanelLayout({ children }: { children: ReactNode }) {

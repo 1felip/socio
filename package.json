@@ -18,7 +18,8 @@
     "db:types": "supabase gen types typescript --linked --schema public > packages/db/src/database.types.ts",
     "seed": "pnpm --filter seed seed",
     "llm:smoke": "pnpm --filter @socio/llm smoke",
-    "eval:reviews": "pnpm --filter @socio/agents eval:reviews"
+    "eval:reviews": "pnpm --filter @socio/agents eval:reviews",
+    "eval:analyst": "pnpm --filter @socio/agents eval:analyst"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",

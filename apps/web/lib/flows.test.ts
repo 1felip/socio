@@ -10,7 +10,14 @@ import {
 } from './backend/demo.ts';
 import { resolveBackendMode } from './backend/index.ts';
 import type { Backend, CookieJar, SessionUser } from './backend/types.ts';
-import { decide, sniffImageType, submitDraft, uploadMenuPhoto } from './flows.ts';
+import {
+  askAnalystQuestion,
+  decide,
+  MAX_ANALYST_QUESTION,
+  sniffImageType,
+  submitDraft,
+  uploadMenuPhoto,
+} from './flows.ts';
 import { buildPublishPayload, draftToForm, type ReviewForm } from './review-form.ts';
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46]);
@@ -173,6 +180,40 @@ describe('fluxo do cardápio (demo)', () => {
       new TextEncoder().encode('<svg/>'),
     );
     expect(res).toEqual({ ok: false, error: 'Use uma foto em JPG, PNG ou WEBP.' });
+  });
+});
+
+describe('analista (demo)', () => {
+  it('membro pergunta e recebe resposta com gráfico; nada vai para aprovação', async () => {
+    const { backend, user, merchantId } = await login(state, DEMO_STAFF_EMAIL);
+    const res = await askAnalystQuestion(
+      backend,
+      user,
+      merchantId,
+      'Qual dia da semana vende mais?',
+    );
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.value.status).toBe('ok');
+      expect(res.value.answer).toMatch(/Sábado/);
+      expect(res.value.chart?.type).toBe('bar');
+    }
+    expect(await backend.approvals.list(merchantId)).toEqual([]);
+  });
+
+  it('valida pergunta e acesso à loja', async () => {
+    const { backend, user, merchantId } = await login(state, DEMO_OWNER_EMAIL);
+    expect(await askAnalystQuestion(backend, user, merchantId, '  ')).toEqual({
+      ok: false,
+      error: 'Escreva sua pergunta.',
+    });
+    const long = 'a'.repeat(MAX_ANALYST_QUESTION + 1);
+    expect((await askAnalystQuestion(backend, user, merchantId, long)).ok).toBe(false);
+    const stranger = { id: 'outro-usuario', email: 'x@y.z' };
+    expect(await askAnalystQuestion(backend, stranger, merchantId, 'Quanto vendi?')).toEqual({
+      ok: false,
+      error: 'Loja não encontrada.',
+    });
   });
 });
 

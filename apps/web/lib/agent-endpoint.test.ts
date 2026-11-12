@@ -1,3 +1,4 @@
+import { demoAnalystAnswer } from '@socio/agents';
 import { configureLlm, MemoryRunStore } from '@socio/llm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { signBody, verifySignature } from './agent-auth.ts';
@@ -78,7 +79,7 @@ describe('verifySignature', () => {
 });
 
 describe('POST /api/agent', () => {
-  it('n8n assinado recebe a resposta padrão', async () => {
+  it('n8n assinado: intenção analista responde pelo Agente Analista', async () => {
     const res = await handleAgentPost(
       signed({ merchantId: merchantId(), channel: 'whatsapp', text: 'Quanto eu vendi ontem?' }),
       deps(),
@@ -86,6 +87,7 @@ describe('POST /api/agent', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({
       intent: 'analista',
+      text: demoAnalystAnswer('Quanto eu vendi ontem?').answer,
       approvals: [],
       attachments: [],
     });

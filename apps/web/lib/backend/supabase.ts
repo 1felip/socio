@@ -7,12 +7,16 @@
  */
 import { randomUUID } from 'node:crypto';
 import {
+  ANALYST_MESSAGES,
+  type AnalystDb,
+  askAnalyst,
   createApprovalService,
   createCatalogPublisher,
   createReviewReplyPublisher,
   extractMenu,
   MenuDraft,
   MenuReadError,
+  PostgresAnalystDb,
   SupabaseApprovalStore,
   SupabaseConversationStore,
   SupabaseReviewSyncStore,
@@ -25,6 +29,17 @@ import { monthStart, publishedItems } from './stats.ts';
 import type { Backend, CookieJar, MenuUpload, MerchantRef, UploadStatus } from './types.ts';
 
 export const MENU_BUCKET = 'menu-photos';
+
+/** Conexão do Analista (role analyst_ro), uma por processo. */
+let analystDb: AnalystDb | null | undefined;
+
+function getAnalystDb(env: Record<string, string | undefined> = process.env): AnalystDb | null {
+  if (analystDb === undefined) {
+    const url = env.SUPABASE_DB_URL_ANALYST_RO;
+    analystDb = url ? new PostgresAnalystDb(url) : null;
+  }
+  return analystDb;
+}
 
 const EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -118,6 +133,27 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
         },
         merchantId,
       );
+    },
+
+    async askAnalyst(merchantId, question) {
+      const db = getAnalystDb();
+      if (!db) {
+        console.error('[analyst] SUPABASE_DB_URL_ANALYST_RO não configurada');
+        return {
+          status: 'failed',
+          question,
+          answer: ANALYST_MESSAGES.failed,
+          chart: null,
+          sql: null,
+          rowCount: 0,
+          rows: [],
+          columns: [],
+          costUsd: 0,
+          attempts: 0,
+          error: 'SUPABASE_DB_URL_ANALYST_RO ausente',
+        };
+      }
+      return askAnalyst(question, { merchantId, db });
     },
 
     async currentUser() {

@@ -9,12 +9,15 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
     "menu:extract": "node --env-file-if-exists=../../.env scripts/menu-extract.ts",
-    "eval:reviews": "node --env-file-if-exists=../../.env scripts/eval-reviews.ts"
+    "eval:reviews": "node --env-file-if-exists=../../.env scripts/eval-reviews.ts",
+    "eval:analyst": "node --env-file-if-exists=../../.env scripts/eval-analyst.ts"
   },
   "dependencies": {
     "@socio/db": "workspace:*",
     "@socio/ifood-client": "workspace:*",
     "@socio/llm": "workspace:*",
+    "libpg-query": "17.7.4",
+    "postgres": "3.4.9",
     "zod": "4.6.7"
   }
 }

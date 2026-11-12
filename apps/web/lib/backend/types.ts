@@ -1,4 +1,5 @@
 import type {
+  AnalystAnswer,
   ApprovalService,
   ConversationStore,
   createCatalogPublisher,
@@ -102,6 +103,9 @@ export interface Backend {
   readonly reviewPublisher: ReviewReplyPublisher;
   /** Agente Avaliações sobre as avaliações novas: só cria aprovações e alertas. */
   syncReviews(merchantId: string): Promise<ReviewSyncResult>;
+
+  /** Agente Analista: pergunta → SQL só leitura (analyst_ro) → resposta curta + gráfico. */
+  askAnalyst(merchantId: string, question: string): Promise<AnalystAnswer>;
 
   monthStats(merchantId: string, now: Date): Promise<MonthStats>;
 }

@@ -21,7 +21,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T12 | 2 | Orquestrador e roteamento | T07 | CLAUDE | done |
 | T13 | 2 | MCP server ifood-parceiro | T07 | CLAUDE | done |
 | T14 | 2 | Agente Avaliações | T03, T12 | CLAUDE | doing |
-| T15 | 2 | Agente Analista: texto para SQL | T03, T12 | CLAUDE | todo |
+| T15 | 2 | Agente Analista: texto para SQL | T03, T12 | CLAUDE | doing |
 | T16 | 2 | WhatsApp Cloud API | T12 | AMBOS | todo |
 | T17 | 2 | n8n: entrada, botões e rotinas | T16 | AMBOS | todo |
 | T18 | 2 | Voz e briefing diário | T15, T17 | CLAUDE | todo |

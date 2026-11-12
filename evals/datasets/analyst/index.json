@@ -1,0 +1,12 @@
+{
+  "suite": "analyst",
+  "files": ["questions.json"],
+  "targets": { "minCorrect": 34, "accuracy": 0.85 },
+  "stores": {
+    "pizzaria": "5e3d0000-0000-4000-8000-000000000001",
+    "marmitaria": "5e3d0000-0000-4000-8000-000000000002",
+    "acai": "5e3d0000-0000-4000-8000-000000000003"
+  },
+  "today": "2026-10-30T12:00:00-03:00",
+  "notes": "Dados: supabase/seed.sql (T03, determinístico) num PGlite com as migrations, consultado como analyst_ro. Gabarito é o gold_sql, recalculado a cada rodada; os padrões plantados (planted-patterns.json) entram como checagem de texto. Gabarito é verdade: não edite para passar."
+}

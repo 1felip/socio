@@ -1,9 +1,10 @@
 'use server';
 
+import type { AnalystAnswer } from '@socio/agents';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { decide, submitDraft, uploadMenuPhoto } from '@/lib/flows';
+import { askAnalystQuestion, decide, submitDraft, uploadMenuPhoto } from '@/lib/flows';
 import { getBackend, MERCHANT_COOKIE, requireContext, requireMerchant } from '@/lib/session';
 
 export interface FormState {
@@ -84,4 +85,22 @@ export async function decideAction(
       ? 'feito=recusado'
       : `feito=publicado&n=${Math.max(0, Math.trunc(res.value.itemsPublished ?? 0))}`;
   redirect(`/aprovacoes/${encodeURIComponent(approvalId)}?${q}`);
+}
+
+export interface AnalystFormState {
+  error?: string;
+  result?: AnalystAnswer;
+}
+
+export async function askAnalystAction(
+  _prev: AnalystFormState,
+  form: FormData,
+): Promise<AnalystFormState> {
+  const { backend, user, merchant } = await requireMerchant();
+  const question = String(form.get('question') ?? '');
+  const res = await askAnalystQuestion(backend, user, merchant.id, question);
+  if (!res.ok) return { error: res.error };
+  // Linhas cruas ficam no servidor: o painel só precisa da resposta e do gráfico.
+  const { rows: _rows, error: _error, ...result } = res.value;
+  return { result: { ...result, rows: [], columns: [] } };
 }

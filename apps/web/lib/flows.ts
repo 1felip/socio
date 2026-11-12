@@ -6,6 +6,7 @@
  *   aprovações espera da rota antes de `approve/reject`.
  */
 import {
+  type AnalystAnswer,
   type Approval,
   ApprovalError,
   CATALOG_PUBLISH,
@@ -144,5 +145,26 @@ export async function decide(
       return fail(err.message);
     }
     return fail('Deu um problema ao publicar. Confere a fila de aprovações e tenta de novo.');
+  }
+}
+
+export const MAX_ANALYST_QUESTION = 500;
+
+/** Pergunta ao Analista: qualquer membro da loja. Só leitura, nada vai para aprovação. */
+export async function askAnalystQuestion(
+  backend: Backend,
+  user: SessionUser,
+  merchantId: string,
+  question: string,
+): Promise<FlowResult<AnalystAnswer>> {
+  if (!(await membership(backend, user, merchantId))) return fail('Loja não encontrada.');
+  const q = question.trim();
+  if (!q) return fail('Escreva sua pergunta.');
+  if (q.length > MAX_ANALYST_QUESTION) return fail('Pergunta longa demais. Resume em uma frase?');
+  try {
+    return ok(await backend.askAnalyst(merchantId, q));
+  } catch (err) {
+    console.error('[analyst]', err instanceof Error ? err.message : err);
+    return fail('Não consegui montar essa análise agora. Tente de novo em instantes.');
   }
 }

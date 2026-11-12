@@ -1,5 +1,11 @@
 export const packageName = '@socio/agents' as const;
 
+export * from './analyst/db.ts';
+export * from './analyst/fixtures.ts';
+export * from './analyst/guard.ts';
+export * from './analyst/pipeline.ts';
+export * from './analyst/schema.ts';
+export * from './analyst/views.ts';
 export * from './approvals/service.ts';
 export { SupabaseApprovalStore } from './approvals/supabase-store.ts';
 export * from './catalog/publish.ts';
