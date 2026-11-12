@@ -25,6 +25,7 @@ import {
 } from '@socio/agents';
 import { createServerClient, createServiceClient, type DbClient } from '@socio/db';
 import { getIfoodClient, type IfoodClient } from '@socio/ifood-client';
+import { type RunRow, splitAgent } from '../costs.ts';
 import { monthStart, publishedItems } from './stats.ts';
 import type { Backend, CookieJar, MenuUpload, MerchantRef, UploadStatus } from './types.ts';
 
@@ -280,6 +281,27 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
         catalogId: catalog.catalogId,
         categories: categories.map((c) => ({ id: c.id, name: c.name })),
       };
+    },
+
+    async listRuns(merchantId, since) {
+      // RLS: membro lê os runs da loja. Teto de linhas para a página não pesar.
+      const { data, error } = await user
+        .from('agent_runs')
+        .select('agent, model, cost_usd, latency_ms, status, trace_id, created_at')
+        .eq('merchant_id', merchantId)
+        .gte('created_at', since.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(5000);
+      if (error) throw new Error(`agent_runs: ${error.message}`);
+      return (data ?? []).map((r) => ({
+        ...splitAgent(r.agent),
+        model: r.model,
+        costUsd: Number(r.cost_usd),
+        latencyMs: r.latency_ms,
+        status: r.status as RunRow['status'],
+        traceId: r.trace_id,
+        createdAt: new Date(r.created_at),
+      }));
     },
 
     async monthStats(merchantId, now) {

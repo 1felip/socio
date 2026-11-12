@@ -23,6 +23,7 @@
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase | — | sim |
 | `SUPABASE_DB_URL_ANALYST_RO` | conexão do Analista (login que pode `set role analyst_ro`) | — | sim |
 | `MODEL_*` e chaves dos provedores | ver `.env.example` (T05) | — | sim |
+| `LANGFUSE_PROJECT_ID` | link do trace em /custos (id do projeto na URL do Langfuse; `LANGFUSE_HOST` opcional) | — | opcional |
 | `N8N_WEBHOOK_SECRET` | HMAC do n8n | — | quando ligar o n8n |
 
 ## Conta demo

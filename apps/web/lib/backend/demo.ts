@@ -23,6 +23,7 @@ import {
   type IfoodClient,
   MockIfoodClient,
 } from '@socio/ifood-client';
+import type { RunRow } from '../costs.ts';
 import { demoDraft } from './demo-draft.ts';
 import { sign, unsign } from './signed-cookie.ts';
 import { monthStart, publishedItems } from './stats.ts';
@@ -47,7 +48,7 @@ export interface DemoState {
   merchants: Array<{ id: string; name: string; ifoodMerchantId: string }>;
   members: Array<{ merchantId: string; userId: string; role: MemberRole }>;
   uploads: Map<string, MenuUpload & { photo: Uint8Array }>;
-  runs: Array<{ merchantId: string; costUsd: number; at: Date }>;
+  runs: Array<RunRow & { merchantId: string }>;
   approvalStore: MemoryApprovalStore;
   conversationStore: MemoryConversationStore;
   roi: MemoryRoiStore;
@@ -71,7 +72,7 @@ export function createDemoState(env: Record<string, string | undefined> = proces
       { merchantId, userId: staff.id, role: 'staff' },
     ],
     uploads: new Map(),
-    runs: [],
+    runs: demoRunHistory(merchantId, new Date()),
     approvalStore: new MemoryApprovalStore(),
     conversationStore: new MemoryConversationStore(),
     roi: new MemoryRoiStore(),
@@ -200,7 +201,17 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
         photo: image.data,
       };
       state.uploads.set(upload.id, upload);
-      state.runs.push({ merchantId, costUsd: DEMO_RUN_COST_USD, at: new Date() });
+      state.runs.push({
+        merchantId,
+        agent: 'menu',
+        step: 'extract',
+        model: 'demo',
+        costUsd: DEMO_RUN_COST_USD,
+        latencyMs: 8400,
+        status: 'ok',
+        traceId: null,
+        createdAt: new Date(),
+      });
       return publicUpload(upload);
     },
 
@@ -220,6 +231,12 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
       };
     },
 
+    async listRuns(merchantId, since) {
+      return state.runs
+        .filter((r) => r.merchantId === merchantId && r.createdAt >= since)
+        .map(({ merchantId: _m, ...r }) => ({ ...r }));
+    },
+
     async monthStats(merchantId, now) {
       const from = monthStart(now).getTime();
       const executed = [...state.approvalStore.rows.values()].filter(
@@ -235,7 +252,7 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
           .filter((e) => e.merchantId === merchantId)
           .reduce((n, e) => n + e.minutesSaved, 0),
         aiCostUsd: state.runs
-          .filter((r) => r.merchantId === merchantId && r.at.getTime() >= from)
+          .filter((r) => r.merchantId === merchantId && r.createdAt.getTime() >= from)
           .reduce((n, r) => n + r.costUsd, 0),
       };
     },
@@ -259,10 +276,51 @@ export function resetDemoState(
     ]),
   );
   state.uploads = fresh.uploads;
-  state.runs = fresh.runs;
+  state.runs = demoRunHistory(state.merchants[0]?.id ?? '', new Date());
   state.approvalStore = fresh.approvalStore;
   state.conversationStore = fresh.conversationStore;
   state.roi = fresh.roi;
   state.reviews = new MemoryReviewSyncStore(reviewsFor);
   state.ifood = fresh.ifood;
+}
+
+/** Agentes e passos que aparecem no histórico de exemplo (custos e latências ilustrativos). */
+const DEMO_STEPS = [
+  { agent: 'menu', step: 'extract', model: 'demo-vision', cost: 0.0031, ms: 7800 },
+  { agent: 'menu', step: 'refine', model: 'demo-orchestrator', cost: 0.0011, ms: 2600 },
+  { agent: 'reviews', step: 'classify', model: 'demo-fast', cost: 0.0002, ms: 900 },
+  { agent: 'reviews', step: 'reply', model: 'demo-orchestrator', cost: 0.0009, ms: 2100 },
+  { agent: 'analyst', step: 'sql', model: 'demo-orchestrator', cost: 0.0024, ms: 3300 },
+  { agent: 'analyst', step: 'answer', model: 'demo-fast', cost: 0.0003, ms: 1100 },
+  { agent: 'orchestrator', step: 'router', model: 'demo-fast', cost: 0.0001, ms: 600 },
+] as const;
+
+/**
+ * 14 dias de uso de exemplo para a página /custos do modo demo. Determinístico (sem Math.random)
+ * para a tela e os testes não mudarem a cada carga.
+ */
+export function demoRunHistory(
+  merchantId: string,
+  now: Date,
+): Array<RunRow & { merchantId: string }> {
+  const out: Array<RunRow & { merchantId: string }> = [];
+  for (let day = 13; day >= 0; day--) {
+    const perDay = 6 + ((day * 7) % 9);
+    for (let i = 0; i < perDay; i++) {
+      const s = DEMO_STEPS[(day + i * 3) % DEMO_STEPS.length] as (typeof DEMO_STEPS)[number];
+      const jitter = 0.7 + ((day * 13 + i * 29) % 60) / 100;
+      out.push({
+        merchantId,
+        agent: s.agent,
+        step: s.step,
+        model: s.model,
+        costUsd: Number((s.cost * jitter).toFixed(6)),
+        latencyMs: Math.round(s.ms * jitter),
+        status: (day * 31 + i) % 47 === 0 ? 'error' : 'ok',
+        traceId: null,
+        createdAt: new Date(now.getTime() - day * 86_400_000 - (i + 1) * 37 * 60_000),
+      });
+    }
+  }
+  return out;
 }

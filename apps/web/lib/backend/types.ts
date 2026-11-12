@@ -8,6 +8,8 @@ import type {
   ReviewSyncResult,
 } from '@socio/agents';
 
+import type { RunRow } from '../costs.ts';
+
 export type BackendMode = 'demo' | 'supabase';
 
 export interface SessionUser {
@@ -108,6 +110,9 @@ export interface Backend {
   askAnalyst(merchantId: string, question: string): Promise<AnalystAnswer>;
 
   monthStats(merchantId: string, now: Date): Promise<MonthStats>;
+
+  /** Execuções de agentes (agent_runs) da loja desde `since`, para /custos e o aviso de teto. */
+  listRuns(merchantId: string, since: Date): Promise<RunRow[]>;
 
   /**
    * Restaura as lojas demo (cron diário). demo: zera o estado em memória; supabase: apaga

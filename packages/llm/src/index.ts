@@ -33,6 +33,7 @@ export {
   type CostLimits,
   type CostScope,
   readCostLimits,
+  startOfDay,
 } from './limits.ts';
 export { EMBED_DIMENSIONS } from './models.ts';
 export { type MaskOptions, maskPII, PII_TOKENS } from './pii.ts';

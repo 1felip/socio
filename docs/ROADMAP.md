@@ -26,7 +26,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T17 | 2 | n8n: entrada, botões e rotinas | T16 | AMBOS | todo |
 | T18 | 2 | Voz e briefing diário | T15, T17 | CLAUDE | todo |
 | T19 | 3 | Evals completos no CI | T14, T15 | CLAUDE | todo |
-| T20 | 3 | Observabilidade e custos no painel | T12 | CLAUDE | todo |
+| T20 | 3 | Observabilidade e custos no painel | T12 | CLAUDE | doing |
 | T21 | 3 | Revisão de segurança e PII | T14, T15, T17 | CLAUDE | todo |
 | T22 | 3 | Campanhas (opcional) | T12 | CLAUDE | todo |
 | T23 | 3 | Teste com restaurante real | T11 | AMBOS | todo |
