@@ -9,6 +9,8 @@ import {
   MerchantSummary,
   Order,
   OrderEvent,
+  Promotion,
+  PromotionCreate,
   Review,
   ReviewAnswer,
   ReviewAnswerRequest,
@@ -32,6 +34,8 @@ export interface MockStore {
   ackEvents(eventIds: string[]): Promise<void>;
   order(orderId: string): Promise<Order | null>;
   sales(merchantId: string, range: DateRange): Promise<Sale[]>;
+  promotions(merchantId: string): Promise<Promotion[]>;
+  savePromotion(merchantId: string, promotion: Promotion): Promise<void>;
 }
 
 const POLLING_LIMIT = 100;
@@ -145,5 +149,38 @@ export class MockIfoodClient implements IfoodClient {
       netRevenue: sum((s) => s.netValue),
       averageTicket: done.length ? round2(grossRevenue / done.length) : 0,
     });
+  }
+
+  async listPromotions(merchantId: string) {
+    return Promotion.array().parse(await this.store.promotions(merchantId));
+  }
+
+  async createPromotion(merchantId: string, body: PromotionCreate, approval: ApprovalRef) {
+    requireApproval('createPromotion', approval);
+    const req = PromotionCreate.parse(body);
+    if (req.endDate < req.startDate) {
+      throw new Error('createPromotion: endDate antes de startDate (400 na API).');
+    }
+    const existing = (await this.store.promotions(merchantId)).find((p) => p.id === req.id);
+    if (existing) return Promotion.parse(existing);
+
+    const items = new Set<string>();
+    for (const catalog of await this.store.catalogs(merchantId)) {
+      for (const cat of await this.store.categories(merchantId, catalog.catalogId)) {
+        for (const item of cat.items) items.add(item.id);
+      }
+    }
+    const missing = req.itemIds.find((id) => !items.has(id));
+    if (missing) throw new IfoodNotFoundError('item', missing);
+
+    const now = this.now();
+    const today = now.toISOString().slice(0, 10);
+    const promotion = Promotion.parse({
+      ...req,
+      status: req.startDate > today ? 'SCHEDULED' : req.endDate < today ? 'ENDED' : 'ACTIVE',
+      createdAt: now.toISOString(),
+    });
+    await this.store.savePromotion(merchantId, promotion);
+    return promotion;
   }
 }

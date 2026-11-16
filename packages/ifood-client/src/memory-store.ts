@@ -8,6 +8,7 @@ import type {
   MerchantSummary,
   Order,
   OrderEvent,
+  Promotion,
   Review,
   ReviewAnswer,
   Sale,
@@ -29,6 +30,7 @@ export interface MemorySeed {
 export function createMemoryStore(seed: MemorySeed): MockStore {
   const s: MemorySeed = structuredClone(seed);
   const acked = new Set<string>();
+  const promotions = new Map<string, Promotion[]>();
 
   return {
     async merchants() {
@@ -96,6 +98,15 @@ export function createMemoryStore(seed: MemorySeed): MockStore {
         const day = x.orderDate.slice(0, 10);
         return day >= range.beginDate && day <= range.endDate;
       });
+    },
+    async promotions(merchantId) {
+      return promotions.get(merchantId) ?? [];
+    },
+    async savePromotion(merchantId, promotion: Promotion) {
+      promotions.set(merchantId, [
+        ...(promotions.get(merchantId) ?? []),
+        structuredClone(promotion),
+      ]);
     },
   };
 }

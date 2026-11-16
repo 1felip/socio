@@ -147,6 +147,27 @@ export type Category = z.infer<typeof Category>;
 export const ItemStatusPatch = z.looseObject({ itemId: z.string(), status: Status });
 export const ItemPricePatch = z.looseObject({ itemId: z.string(), price: Price });
 
+// ---------- Promoções (formato próprio do mock) ----------
+// A API de parceiros não tem endpoint público de promoção no nosso escopo: este formato é
+// nosso e só o mock o implementa. Desconto percentual sobre itens do catálogo, com período.
+
+export const PromotionCreate = z.strictObject({
+  id: z.string().min(1),
+  name: z.string().min(1).max(80),
+  type: z.literal('PERCENTAGE'),
+  discountPercent: z.number().int().min(1).max(70),
+  itemIds: z.array(z.string().min(1)).min(1).max(50),
+  startDate: IsoDate,
+  endDate: IsoDate,
+});
+export type PromotionCreate = z.infer<typeof PromotionCreate>;
+
+export const Promotion = PromotionCreate.extend({
+  status: z.enum(['SCHEDULED', 'ACTIVE', 'ENDED']),
+  createdAt: IsoDateTime,
+});
+export type Promotion = z.infer<typeof Promotion>;
+
 // ---------- Pedidos (v1.0) ----------
 
 export const EventCode = z.enum(['PLC', 'CFM', 'RTP', 'DSP', 'CON', 'CAN']);

@@ -7,6 +7,8 @@ import type {
   MerchantSummary,
   Order,
   OrderEvent,
+  Promotion,
+  PromotionCreate,
   ReviewAnswer,
   ReviewPage,
 } from './schemas';
@@ -61,4 +63,12 @@ export interface IfoodClient {
   getOrder(orderId: string): Promise<Order>;
 
   getFinancialSummary(merchantId: string, range: DateRange): Promise<FinancialSummary>;
+
+  listPromotions(merchantId: string): Promise<Promotion[]>;
+  /** Escrita: exige aprovação. Idempotente pelo `body.id`. */
+  createPromotion(
+    merchantId: string,
+    body: PromotionCreate,
+    approval: ApprovalRef,
+  ): Promise<Promotion>;
 }

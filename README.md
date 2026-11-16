@@ -7,6 +7,7 @@ Agente de IA que opera a loja de um pequeno restaurante parceiro do iFood pelo W
 Este repositório começa **sem código**: ele traz o roadmap e a configuração para o Claude Code construir o projeto inteiro pelo terminal, uma tarefa por sessão.
 
 ## Pré-requisitos
+
 - Node 20+ e pnpm (`corepack enable`)
 - Git e, opcionalmente, GitHub CLI (`gh`)
 - Claude Code instalado e logado
@@ -36,23 +37,24 @@ Tarefas marcadas como HUMANO ou AMBOS têm passos que só você pode fazer (cria
 
 ## Como este repo economiza tokens
 
-| Técnica | Onde | Efeito |
-|---|---|---|
-| CLAUDE.md curto | `CLAUDE.md` | Carregado em toda sessão; detalhes ficam fora dele |
-| 1 tarefa = 1 sessão + `/clear` | `/next`, `/done` | O contexto nunca acumula tarefas antigas |
-| Tarefas autocontidas | `docs/tasks/` | Cada sessão lê só um arquivo de ~40 linhas |
-| Handoff curto | `docs/SESSION.md` | ≤15 linhas no lugar do histórico inteiro |
-| Script de roadmap | `scripts/roadmap.mjs` | Estado em 5 linhas em vez de ler o roadmap |
-| Hook de início | `scripts/hooks/session-start.mjs` | Injeta o estado sem nenhuma leitura de arquivo |
-| Comandos com `disable-model-invocation` | `.claude/skills/next`, `done`… | Não ocupam contexto até você chamar |
-| Skills de conhecimento sob demanda | `.claude/skills/*` | Só a descrição fica no contexto; o corpo carrega quando é preciso |
-| Subagentes Haiku | `.claude/agents/` | Logs de teste, eval e documentação ficam fora do contexto principal |
-| Hook pós-edição silencioso | `scripts/hooks/post-edit.mjs` | Só fala quando o lint falha |
-| Leitura bloqueada | `.claude/settings.json` | Impede ler node_modules, builds, lockfile e imagens |
-| Saída de Bash e MCP limitada | `env` em `settings.json` | Corta logs gigantes |
-| MCPs ligados por fase | `.mcp.json` + `/mcp` | Só 2 MCPs ativos por padrão; os outros você liga quando a tarefa pedir |
+| Técnica                                 | Onde                              | Efeito                                                                 |
+| --------------------------------------- | --------------------------------- | ---------------------------------------------------------------------- |
+| CLAUDE.md curto                         | `CLAUDE.md`                       | Carregado em toda sessão; detalhes ficam fora dele                     |
+| 1 tarefa = 1 sessão + `/clear`          | `/next`, `/done`                  | O contexto nunca acumula tarefas antigas                               |
+| Tarefas autocontidas                    | `docs/tasks/`                     | Cada sessão lê só um arquivo de ~40 linhas                             |
+| Handoff curto                           | `docs/SESSION.md`                 | ≤15 linhas no lugar do histórico inteiro                               |
+| Script de roadmap                       | `scripts/roadmap.mjs`             | Estado em 5 linhas em vez de ler o roadmap                             |
+| Hook de início                          | `scripts/hooks/session-start.mjs` | Injeta o estado sem nenhuma leitura de arquivo                         |
+| Comandos com `disable-model-invocation` | `.claude/skills/next`, `done`…    | Não ocupam contexto até você chamar                                    |
+| Skills de conhecimento sob demanda      | `.claude/skills/*`                | Só a descrição fica no contexto; o corpo carrega quando é preciso      |
+| Subagentes Haiku                        | `.claude/agents/`                 | Logs de teste, eval e documentação ficam fora do contexto principal    |
+| Hook pós-edição silencioso              | `scripts/hooks/post-edit.mjs`     | Só fala quando o lint falha                                            |
+| Leitura bloqueada                       | `.claude/settings.json`           | Impede ler node_modules, builds, lockfile e imagens                    |
+| Saída de Bash e MCP limitada            | `env` em `settings.json`          | Corta logs gigantes                                                    |
+| MCPs ligados por fase                   | `.mcp.json` + `/mcp`              | Só 2 MCPs ativos por padrão; os outros você liga quando a tarefa pedir |
 
 Mais dicas:
+
 - Use Sonnet no dia a dia (`/model`). Deixe modelos maiores ou o modo plano para tarefas de arquitetura (T05, T12).
 - Rode `/context` de vez em quando para ver o que está ocupando espaço.
 - Não peça "leia o projeto". Peça a tarefa.
@@ -74,8 +76,19 @@ docs/ARCHITECTURE.md      visão completa (sob demanda)
 scripts/                  roadmap e hooks (Node, funciona no Windows)
 ```
 
+## Campanhas: suposições da simulação
+
+`promo.simulate` (packages/agents/src/promo/simulate.ts) estima o efeito de um desconto. As suposições são estas, sem dados da loja:
+
+- Margem = (preço − custo − comissão) ÷ preço. O custo do item é opcional por loja; sem custo, o item não entra em promoção.
+- Elasticidade linear: cada 1% de desconto aumenta o volume do item em 1,5% (20% off → +30%), com teto de +60%.
+- Sem canibalização entre itens, sem efeito em outros pedidos e sem contar cliente novo que volta.
+- `promo.create` só cria a aprovação se todos os itens ficarem na margem mínima da loja, e confere de novo antes de executar. Hoje roda só no mock.
+
 ## MCPs
+
 Ativos por padrão: `context7` (documentação de bibliotecas) e `supabase`. Ligue os outros com `/mcp` quando a tarefa pedir: `playwright` (T08, T10), `n8n` (T17), `firecrawl` (T04, opcional). Chaves vão no seu ambiente, nunca no repositório.
 
 ## Windows
+
 Os hooks e scripts são Node puro. Se um hook não rodar, troque `$CLAUDE_PROJECT_DIR` por caminho relativo em `.claude/settings.json`.

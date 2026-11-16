@@ -38,4 +38,10 @@ export class RealIfoodClient implements IfoodClient {
   async getFinancialSummary(): Promise<never> {
     throw new NotConfiguredError('getFinancialSummary');
   }
+  async listPromotions(): Promise<never> {
+    throw new NotConfiguredError('listPromotions');
+  }
+  async createPromotion(): Promise<never> {
+    throw new NotConfiguredError('createPromotion');
+  }
 }

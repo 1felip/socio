@@ -15,6 +15,8 @@ export * from './orchestrator/memory.ts';
 export * from './orchestrator/orchestrator.ts';
 export * from './orchestrator/router.ts';
 export * from './orchestrator/schema.ts';
+export * from './promo/create.ts';
+export * from './promo/simulate.ts';
 export * from './reviews/fixtures.ts';
 export * from './reviews/pipeline.ts';
 export * from './reviews/reply.ts';

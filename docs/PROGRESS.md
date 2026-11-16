@@ -6,3 +6,4 @@ Uma linha por tarefa concluída (escrita pelo /done).
 - 2026-11-10 T08 — Painel: login, upload, revisão editável, fila de aprovações e cards; modo demo sem chaves
 - 2026-11-10 T12 — Orquestrador: /api/agent com HMAC/sessão, roteador híbrido, loop de tools e memória curta
 - 2026-11-10 T13 — MCP server ifood-parceiro (stdio/HTTP), 7 tools, publicação com confirmação do dono por elicitation
+- 2026-11-16 T22 — Campanhas: promo.simulate com margem por custo e promo.create no mock com aprovação

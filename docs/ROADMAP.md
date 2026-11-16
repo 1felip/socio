@@ -28,6 +28,6 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T19 | 3 | Evals completos no CI | T14, T15 | CLAUDE | doing |
 | T20 | 3 | Observabilidade e custos no painel | T12 | CLAUDE | doing |
 | T21 | 3 | Revisão de segurança e PII | T14, T15, T17 | CLAUDE | todo |
-| T22 | 3 | Campanhas (opcional) | T12 | CLAUDE | todo |
+| T22 | 3 | Campanhas (opcional) | T12 | CLAUDE | done |
 | T23 | 3 | Teste com restaurante real | T11 | AMBOS | todo |
 | T24 | 3 | Case study, README final e vídeo | T19, T20, T21, T23 | AMBOS | todo |

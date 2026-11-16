@@ -220,7 +220,7 @@ describe('getIfoodClient e RealIfoodClient', () => {
     const methods = Object.getOwnPropertyNames(RealIfoodClient.prototype).filter(
       (m) => m !== 'constructor',
     );
-    expect(methods.length).toBe(11);
+    expect(methods.length).toBe(13);
     for (const m of methods) {
       const fn = (real as unknown as Record<string, () => Promise<unknown>>)[m];
       await expect(fn?.call(real)).rejects.toBeInstanceOf(NotConfiguredError);
