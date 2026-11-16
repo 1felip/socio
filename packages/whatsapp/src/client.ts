@@ -20,6 +20,34 @@ export const MAX_TEXT_BODY = 4096;
 /** Mídia baixada além disso é recusada (áudio de voz e foto de cardápio cabem com folga). */
 export const MAX_MEDIA_BYTES = 16 * 1024 * 1024;
 
+/** Hosts de onde a Meta serve mídia (URL de getMedia). Exatos, sem curinga. */
+export const MEDIA_HOSTS: ReadonlySet<string> = new Set(['lookaside.fbsbx.com']);
+
+/** Lê o corpo cortando no limite, sem carregar tudo antes de checar. */
+async function readCapped(res: Response, max: number): Promise<Uint8Array> {
+  if (!res.body) return new Uint8Array(0);
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel();
+      throw new WhatsAppConfigError('mídia grande demais');
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    out.set(c, off);
+    off += c.byteLength;
+  }
+  return out;
+}
+
 export interface WhatsAppConfig {
   token: string;
   phoneNumberId: string;
@@ -104,6 +132,13 @@ export class WhatsAppClient {
   private readonly fetchFn: typeof fetch;
 
   constructor(config: WhatsAppConfig) {
+    // Vai no caminho da URL da Graph API: só dígitos, mesmo sem passar por configFromEnv.
+    if (!/^\d{5,30}$/.test(config.phoneNumberId)) {
+      throw new WhatsAppConfigError('WHATSAPP_PHONE_NUMBER_ID deve ter só dígitos.');
+    }
+    if (config.apiVersion && !/^v\d{1,3}\.\d$/.test(config.apiVersion)) {
+      throw new WhatsAppConfigError('versão da API inválida');
+    }
     this.config = config;
     this.fetchFn = config.fetch ?? fetch;
   }
@@ -245,24 +280,28 @@ export class WhatsAppClient {
    * não ir parar em outro host.
    */
   async downloadMedia(info: MediaInfo): Promise<{ data: Uint8Array; mimeType: string }> {
-    const host = new URL(info.url).hostname;
-    if (
-      new URL(info.url).protocol !== 'https:' ||
-      !/(^|\.)(fbsbx\.com|facebook\.com|whatsapp\.net)$/.test(host)
-    ) {
-      throw new WhatsAppConfigError(`host de mídia inesperado: ${host}`);
+    let url: URL;
+    try {
+      url = new URL(info.url);
+    } catch {
+      throw new WhatsAppConfigError('url de mídia inválida');
+    }
+    // Host exato da Meta e sem seguir redirect: o Bearer token não pode sair para outro lugar.
+    if (url.protocol !== 'https:' || !MEDIA_HOSTS.has(url.hostname)) {
+      throw new WhatsAppConfigError(`host de mídia inesperado: ${url.hostname}`);
     }
     if (info.size !== undefined && info.size > MAX_MEDIA_BYTES) {
       throw new WhatsAppConfigError('mídia grande demais');
     }
-    const res = await this.fetchFn(info.url, {
+    const res = await this.fetchFn(url, {
       headers: { authorization: `Bearer ${this.config.token}` },
+      redirect: 'manual',
       signal: AbortSignal.timeout(this.config.timeoutMs ?? 30_000),
     });
     if (!res.ok) throw new WhatsAppApiError(res.status, undefined, 'falha ao baixar mídia');
-    const data = new Uint8Array(await res.arrayBuffer());
-    if (data.byteLength > MAX_MEDIA_BYTES) throw new WhatsAppConfigError('mídia grande demais');
-    return { data, mimeType: info.mimeType };
+    const declared = Number(res.headers.get('content-length') ?? '0');
+    if (declared > MAX_MEDIA_BYTES) throw new WhatsAppConfigError('mídia grande demais');
+    return { data: await readCapped(res, MAX_MEDIA_BYTES), mimeType: info.mimeType };
   }
 
   /** Sobe mídia (ex.: áudio do briefing) e devolve o id para sendAudio. */

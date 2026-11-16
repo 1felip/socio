@@ -293,3 +293,67 @@ describe('cliente da Cloud API', () => {
     ).toThrow(/vNN/);
   });
 });
+
+describe('endurecimento (revisão T16)', () => {
+  const wrap = (value: unknown) => ({
+    object: 'whatsapp_business_account',
+    entry: [{ changes: [{ field: 'messages', value }] }],
+  });
+  const msg = (over: Record<string, unknown>) => ({
+    from: '5511988887777',
+    id: 'w',
+    timestamp: '1762960000',
+    type: 'text',
+    text: { body: 'oi' },
+    ...over,
+  });
+
+  it('webhook: outro número da conta, from inválido, mídia com id ruim e timestamp inválido', () => {
+    const p = parseWebhook(
+      wrap({
+        metadata: { phone_number_id: '999' },
+        messages: [msg({})],
+      }),
+      { phoneNumberId: '123456789' },
+    );
+    expect(p.messages).toEqual([]);
+
+    const now = new Date('2026-11-12T12:00:00Z');
+    const q = parseWebhook(
+      wrap({
+        messages: [
+          msg({ from: '+55 11 9' }),
+          msg({ timestamp: 'x' }),
+          msg({ type: 'audio', audio: { id: '../me' } }),
+        ],
+      }),
+      { now: () => now },
+    );
+    expect(q.messages).toHaveLength(2);
+    expect(q.messages[0]?.at).toEqual(now);
+    expect(q.messages[1]?.kind).toBe('other');
+  });
+
+  it('downloadMedia: só host exato, sem redirect, corta no limite', async () => {
+    const calls: RequestInit[] = [];
+    const big = new Uint8Array(17 * 1024 * 1024);
+    const f = (async (_u: string | URL | Request, init?: RequestInit) => {
+      calls.push(init ?? {});
+      return new Response(big, { status: 200 });
+    }) as typeof fetch;
+    const c = new WhatsAppClient({ token: TOKEN, phoneNumberId: '123456789', fetch: f });
+    await expect(
+      c.downloadMedia({ url: 'https://evil.fbsbx.com/x', mimeType: 'audio/ogg' }),
+    ).rejects.toThrow(/host de mídia/);
+    await expect(
+      c.downloadMedia({ url: 'https://lookaside.fbsbx.com/x', mimeType: 'audio/ogg' }),
+    ).rejects.toThrow(/grande demais/);
+    expect(calls[0]?.redirect).toBe('manual');
+  });
+
+  it('construtor recusa phoneNumberId que não é número', () => {
+    expect(() => new WhatsAppClient({ token: 't', phoneNumberId: '123/../me' })).toThrow(
+      /só dígitos/,
+    );
+  });
+});

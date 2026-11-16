@@ -6,20 +6,21 @@
  * Texto de mensagem é dado de terceiro (não confiável) até o número ser resolvido para um membro.
  */
 import { z } from 'zod';
+import { isWaId } from './phone.ts';
 
 const Message = z
   .object({
     // wa_id do remetente. Pode faltar: a Meta passou a identificar usuários por BSUID (from_user_id).
-    from: z.string().optional(),
-    from_user_id: z.string().optional(),
-    id: z.string(),
-    timestamp: z.string(),
-    type: z.string(),
+    from: z.string().max(32).optional(),
+    from_user_id: z.string().max(128).optional(),
+    id: z.string().max(256),
+    timestamp: z.string().max(20),
+    type: z.string().max(32),
     text: z.object({ body: z.string() }).optional(),
     interactive: z
       .object({
         type: z.string(),
-        button_reply: z.object({ id: z.string(), title: z.string() }).optional(),
+        button_reply: z.object({ id: z.string().max(256), title: z.string().max(64) }).optional(),
       })
       .optional(),
     button: z.object({ payload: z.string().optional(), text: z.string().optional() }).optional(),
@@ -111,7 +112,16 @@ export class WebhookPayloadError extends Error {
 /** Limite de texto que segue adiante (o resto é cortado). */
 export const MAX_INBOUND_TEXT = 4000;
 
-export function parseWebhook(body: unknown): ParsedWebhook {
+export interface ParseOptions {
+  /** Só aceita mensagens para o nosso número (metadata.phone_number_id). */
+  phoneNumberId?: string;
+  now?: () => Date;
+}
+
+/** id de mídia válido para getMedia: só dígitos. */
+const MEDIA_ID = /^\d{1,40}$/;
+
+export function parseWebhook(body: unknown, opts: ParseOptions = {}): ParsedWebhook {
   const parsed = Payload.safeParse(body);
   if (!parsed.success) throw new WebhookPayloadError('payload do WhatsApp inválido');
   const messages: InboundMessage[] = [];
@@ -120,14 +130,21 @@ export function parseWebhook(body: unknown): ParsedWebhook {
     for (const change of entry.changes) {
       if (change.field !== 'messages') continue;
       const v = change.value;
+      // Mensagem para outro número da mesma conta: não é nossa.
+      if (opts.phoneNumberId && v.metadata?.phone_number_id !== opts.phoneNumberId) continue;
       for (const m of v.messages ?? []) {
         // Sem nenhum identificador do remetente não há como responder nem achar a loja.
         if (!m.from && !m.from_user_id) continue;
+        // wa_id fora do formato não vira remetente (não dá para responder nem achar a loja).
+        if (m.from && !isWaId(m.from)) continue;
+        const ts = Number(m.timestamp);
+        const at =
+          Number.isFinite(ts) && ts > 0 ? new Date(ts * 1000) : (opts.now?.() ?? new Date());
         const base = {
           ...(m.from ? { from: m.from } : {}),
           ...(m.from_user_id ? { fromUserId: m.from_user_id } : {}),
           messageId: m.id,
-          at: new Date(Number(m.timestamp) * 1000),
+          at,
           ...(m.context?.id ? { replyTo: m.context.id } : {}),
           ...(v.metadata?.phone_number_id ? { phoneNumberId: v.metadata.phone_number_id } : {}),
         };
@@ -144,14 +161,14 @@ export function parseWebhook(body: unknown): ParsedWebhook {
             ...(m.button.payload ? { buttonId: m.button.payload } : {}),
             ...(m.button.text ? { text: m.button.text } : {}),
           });
-        } else if (m.type === 'audio' && m.audio) {
+        } else if (m.type === 'audio' && m.audio && MEDIA_ID.test(m.audio.id)) {
           messages.push({
             ...base,
             kind: 'audio',
             mediaId: m.audio.id,
             ...(m.audio.mime_type ? { mimeType: m.audio.mime_type } : {}),
           });
-        } else if (m.type === 'image' && m.image) {
+        } else if (m.type === 'image' && m.image && MEDIA_ID.test(m.image.id)) {
           messages.push({
             ...base,
             kind: 'image',
