@@ -23,7 +23,7 @@ Fases: 0 Setup · 1 MVP (até a inscrição, 17/11) · 2 Agente · 3 Prova.
 | T14 | 2 | Agente Avaliações | T03, T12 | CLAUDE | doing |
 | T15 | 2 | Agente Analista: texto para SQL | T03, T12 | CLAUDE | doing |
 | T16 | 2 | WhatsApp Cloud API | T12 | AMBOS | doing |
-| T17 | 2 | n8n: entrada, botões e rotinas | T16 | AMBOS | todo |
+| T17 | 2 | n8n: entrada, botões e rotinas | T16 | AMBOS | doing |
 | T18 | 2 | Voz e briefing diário | T15, T17 | CLAUDE | todo |
 | T19 | 3 | Evals completos no CI | T14, T15 | CLAUDE | doing |
 | T20 | 3 | Observabilidade e custos no painel | T12 | CLAUDE | doing |

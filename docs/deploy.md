@@ -30,6 +30,7 @@
 | `WHATSAPP_VERIFY_TOKEN` | GET de verificação do webhook | — | canal WhatsApp |
 | `WHATSAPP_API_VERSION` | opcional, padrão v27.0 | — | opcional |
 | `N8N_WEBHOOK_SECRET` | HMAC do n8n | — | quando ligar o n8n |
+| `SOCIO_APP_URL` | URL pública do painel (https), para o link de revisão nas mensagens do WhatsApp | — | opcional |
 
 ## Conta demo
 

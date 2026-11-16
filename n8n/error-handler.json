@@ -1,0 +1,76 @@
+{
+  "name": "error-handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Erro em algum workflow",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aviso curto para o operador, sem dados da mensagem (nada de telefone ou texto de cliente).\nconst e = $input.first().json;\nconst wf = e.workflow?.name ?? '?';\nconst node = e.execution?.lastNodeExecuted ?? '?';\nconst msg = String(e.execution?.error?.message ?? 'erro').replace(/\\d{8,}/g, '[número]').slice(0, 300);\nreturn [{ json: { to: $env.SOCIO_OPS_WHATSAPP, text: `Sócio · falha no n8n: ${wf} / ${node}. ${msg} Execução ${e.execution?.id ?? '?'}.` } }];"
+      },
+      "id": "d1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Resume o erro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.to }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d1b2c3d4-0001-4000-8000-000000000003",
+      "name": "Tem número de operação?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "wa-buttons",
+          "cachedResultName": "wa-buttons"
+        },
+        "mode": "each",
+        "options": { "waitForSubWorkflow": false }
+      },
+      "id": "d1b2c3d4-0001-4000-8000-000000000004",
+      "name": "Avisa no WhatsApp",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [660, -80]
+    }
+  ],
+  "connections": {
+    "Erro em algum workflow": {
+      "main": [[{ "node": "Resume o erro", "type": "main", "index": 0 }]]
+    },
+    "Resume o erro": {
+      "main": [[{ "node": "Tem número de operação?", "type": "main", "index": 0 }]]
+    },
+    "Tem número de operação?": {
+      "main": [[{ "node": "Avisa no WhatsApp", "type": "main", "index": 0 }], []]
+    }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "America/Sao_Paulo" },
+  "active": false,
+  "tags": [{ "name": "socio" }]
+}

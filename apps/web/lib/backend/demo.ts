@@ -57,6 +57,8 @@ export interface DemoState {
   }>;
   uploads: Map<string, MenuUpload & { photo: Uint8Array }>;
   runs: Array<RunRow & { merchantId: string }>;
+  /** wamid já processados pelo webhook do WhatsApp → quando chegaram. */
+  inboundSeen: Map<string, Date>;
   approvalStore: MemoryApprovalStore;
   conversationStore: MemoryConversationStore;
   roi: MemoryRoiStore;
@@ -80,6 +82,7 @@ export function createDemoState(env: Record<string, string | undefined> = proces
       { merchantId, userId: staff.id, role: 'staff' },
     ],
     uploads: new Map(),
+    inboundSeen: new Map(),
     runs: demoRunHistory(merchantId, new Date()),
     approvalStore: new MemoryApprovalStore(),
     conversationStore: new MemoryConversationStore(),
@@ -192,6 +195,28 @@ export function createDemoBackend(state: DemoState, jar: CookieJar): Backend {
     async memberByWhatsApp(waId) {
       const m = state.members.find((x) => x.whatsappPhone === waId && x.whatsappVerifiedAt);
       return m ? { merchantId: m.merchantId, userId: m.userId, role: m.role } : null;
+    },
+
+    async whatsAppOwners(merchantId) {
+      return state.members
+        .filter(
+          (m) =>
+            m.merchantId === merchantId &&
+            m.role === 'owner' &&
+            m.whatsappVerifiedAt &&
+            m.whatsappPhone,
+        )
+        .map((m) => m.whatsappPhone as string);
+    },
+
+    async claimInboundMessage(messageId, now) {
+      if (state.inboundSeen.has(messageId)) return false;
+      state.inboundSeen.set(messageId, now);
+      return true;
+    },
+
+    async releaseInboundMessage(messageId) {
+      state.inboundSeen.delete(messageId);
     },
 
     async whatsAppStatusFor(userId, merchantId) {

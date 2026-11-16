@@ -217,6 +217,35 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
         : null;
     },
 
+    async whatsAppOwners(merchantId) {
+      const { data, error } = await admin()
+        .from('merchant_members')
+        .select('whatsapp_phone')
+        .eq('merchant_id', merchantId)
+        .eq('role', 'owner')
+        .not('whatsapp_verified_at', 'is', null);
+      if (error) throw new Error(`merchant_members: ${error.message}`);
+      return (data ?? []).flatMap((r) => (r.whatsapp_phone ? [r.whatsapp_phone] : []));
+    },
+
+    async claimInboundMessage(messageId, now) {
+      // A chave primária faz o trabalho: o segundo insert do mesmo wamid falha com 23505.
+      const { error } = await admin()
+        .from('wa_inbound_messages')
+        .insert({ message_id: messageId, received_at: now.toISOString() });
+      if (!error) return true;
+      if (error.code === '23505') return false;
+      throw new Error(`wa_inbound_messages: ${error.message}`);
+    },
+
+    async releaseInboundMessage(messageId) {
+      const { error } = await admin()
+        .from('wa_inbound_messages')
+        .delete()
+        .eq('message_id', messageId);
+      if (error) throw new Error(`wa_inbound_messages: ${error.message}`);
+    },
+
     async whatsAppStatusFor(userId, merchantId) {
       const { data, error } = await user
         .from('merchant_members')
@@ -299,15 +328,17 @@ export function createSupabaseBackend(cookies: SupabaseCookieAdapter, _jar: Cook
       });
     },
 
-    async createUpload(merchantId, userId, image) {
+    async createUpload(merchantId, userId, image, opts) {
+      // server: webhook do WhatsApp, sem sessão; o membro já foi resolvido pelo número verificado.
+      const db = opts?.server ? admin() : user;
       const id = randomUUID();
       const path = `${merchantId}/${id}.${EXT[image.mediaType] ?? 'jpg'}`;
-      const up = await user.storage
+      const up = await db.storage
         .from(MENU_BUCKET)
         .upload(path, image.data, { contentType: image.mediaType, upsert: false });
       if (up.error) throw new Error(`storage: ${up.error.message}`);
 
-      const ins = await user
+      const ins = await db
         .from('menu_uploads')
         .insert({ id, merchant_id: merchantId, storage_path: path, created_by: userId })
         .select('id, merchant_id, status, draft, error, created_at')

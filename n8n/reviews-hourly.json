@@ -1,0 +1,93 @@
+{
+  "name": "reviews-hourly",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] }
+      },
+      "id": "c1b2c3d4-0001-4000-8000-000000000001",
+      "name": "De hora em hora",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Uma chamada assinada por loja (SOCIO_MERCHANT_IDS = ids separados por vírgula).\nconst crypto = require('crypto');\nconst ids = String($env.SOCIO_MERCHANT_IDS || '').split(',').map((s) => s.trim()).filter(Boolean);\nreturn ids.map((merchantId) => {\n  const raw = JSON.stringify({ merchantId });\n  const ts = String(Math.floor(Date.now() / 1000));\n  const sig = crypto.createHmac('sha256', $env.N8N_WEBHOOK_SECRET).update(`${ts}.${raw}`).digest('hex');\n  return { json: { raw, ts, sig } };\n});"
+      },
+      "id": "c1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Assina por loja",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SOCIO_API_URL }}/api/whatsapp/reviews",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-socio-timestamp", "value": "={{ $json.ts }}" },
+            { "name": "x-socio-signature", "value": "={{ $json.sig }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.raw }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "c1b2c3d4-0001-4000-8000-000000000003",
+      "name": "API sincroniza avaliações",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": { "fieldToSplitOut": "replies", "options": {} },
+      "id": "c1b2c3d4-0001-4000-8000-000000000004",
+      "name": "Um aviso por item",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "wa-buttons",
+          "cachedResultName": "wa-buttons"
+        },
+        "mode": "each",
+        "options": { "waitForSubWorkflow": true }
+      },
+      "id": "c1b2c3d4-0001-4000-8000-000000000005",
+      "name": "Envia (wa-buttons)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "De hora em hora": { "main": [[{ "node": "Assina por loja", "type": "main", "index": 0 }]] },
+    "Assina por loja": {
+      "main": [[{ "node": "API sincroniza avaliações", "type": "main", "index": 0 }]]
+    },
+    "API sincroniza avaliações": {
+      "main": [[{ "node": "Um aviso por item", "type": "main", "index": 0 }]]
+    },
+    "Um aviso por item": {
+      "main": [[{ "node": "Envia (wa-buttons)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "error-handler",
+    "timezone": "America/Sao_Paulo"
+  },
+  "active": false,
+  "tags": [{ "name": "socio" }]
+}

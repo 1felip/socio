@@ -1,0 +1,60 @@
+{
+  "name": "wa-buttons",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{ \"to\": \"5511988887777\", \"text\": \"Publicar 3 itens? \", \"buttons\": [{ \"id\": \"approve:abc\", \"title\": \"Aprovar\" }] }"
+      },
+      "id": "b1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Recebe resposta",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Monta o corpo da Cloud API: texto simples ou mensagem interativa com até 3 botões.\n// Os limites (20 caracteres no título, 1024 no corpo) já vêm aplicados pela API do Sócio; aqui só corta por garantia.\nconst out = [];\nfor (const item of $input.all()) {\n  const { to, text, buttons } = item.json;\n  if (!/^[1-9]\\d{9,14}$/.test(String(to))) continue;\n  const body = Array.isArray(buttons) && buttons.length > 0\n    ? {\n        messaging_product: 'whatsapp',\n        to,\n        type: 'interactive',\n        interactive: {\n          type: 'button',\n          body: { text: String(text).slice(0, 1024) },\n          action: {\n            buttons: buttons.slice(0, 3).map((b) => ({\n              type: 'reply',\n              reply: { id: String(b.id).slice(0, 256), title: String(b.title).slice(0, 20) },\n            })),\n          },\n        },\n      }\n    : { messaging_product: 'whatsapp', to, type: 'text', text: { body: String(text).slice(0, 4096) } };\n  out.push({ json: { body } });\n}\nreturn out;"
+      },
+      "id": "b1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Monta mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $env.WHATSAPP_API_VERSION || 'v27.0' }}/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "b1b2c3d4-0001-4000-8000-000000000003",
+      "name": "Cloud API envia",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "WhatsApp Socio (Bearer)" }
+      }
+    }
+  ],
+  "connections": {
+    "Recebe resposta": { "main": [[{ "node": "Monta mensagem", "type": "main", "index": 0 }]] },
+    "Monta mensagem": { "main": [[{ "node": "Cloud API envia", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "error-handler",
+    "timezone": "America/Sao_Paulo"
+  },
+  "active": false,
+  "tags": [{ "name": "socio" }]
+}

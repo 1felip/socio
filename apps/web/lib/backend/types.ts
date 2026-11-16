@@ -116,8 +116,27 @@ export interface Backend {
     now: Date,
   ): Promise<WhatsAppMember | 'taken' | null>;
 
-  /** Guarda a foto, roda o Agente Cardápio e salva o rascunho. Não publica nada. */
-  createUpload(merchantId: string, userId: string, image: MenuImage): Promise<MenuUpload>;
+  /** Números (wa_id) verificados dos donos da loja: para onde vão os avisos do Sócio. */
+  whatsAppOwners(merchantId: string): Promise<string[]>;
+  /**
+   * Webhook do WhatsApp: marca o wamid como visto. false se já tinha sido processado
+   * (a Meta reenvia a mesma mensagem por dias).
+   */
+  claimInboundMessage(messageId: string, now: Date): Promise<boolean>;
+  /** Desfaz o claim quando o processamento falhou (o reenvio da Meta tenta de novo). */
+  releaseInboundMessage(messageId: string): Promise<void>;
+
+  /**
+   * Guarda a foto, roda o Agente Cardápio e salva o rascunho. Não publica nada.
+   * `server`: chamada sem sessão (webhook do WhatsApp), com o membro já resolvido pelo
+   * número verificado; grava com a service role em vez da sessão do usuário.
+   */
+  createUpload(
+    merchantId: string,
+    userId: string,
+    image: MenuImage,
+    opts?: { server?: boolean },
+  ): Promise<MenuUpload>;
   getUpload(id: string, merchantId: string): Promise<MenuUpload | null>;
 
   catalogTarget(merchantId: string): Promise<CatalogTarget | null>;

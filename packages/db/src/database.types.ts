@@ -200,6 +200,13 @@ export type Database = {
         },
         'merchant_id' | 'channel'
       >;
+      wa_inbound_messages: Table<
+        {
+          message_id: string;
+          received_at: Timestamp;
+        },
+        'message_id'
+      >;
     };
     Views: {
       v_sales_daily: {

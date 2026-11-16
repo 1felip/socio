@@ -116,11 +116,31 @@ export async function decide(
 ): Promise<FlowResult<DecisionOutcome>> {
   const member = await membership(backend, user, merchantId);
   if (!member) return fail('Loja não encontrada.');
-  if (member.role !== 'owner') return fail('Só o dono da loja pode aprovar ou recusar.');
+  return decideFor(
+    backend,
+    { userId: user.id, role: member.role },
+    merchantId,
+    approvalId,
+    decision,
+  );
+}
+
+/**
+ * Mesma decisão para quem já foi resolvido como membro da loja: sessão do painel (acima) ou
+ * número verificado no WhatsApp (botão Aprovar/Recusar, T17).
+ */
+export async function decideFor(
+  backend: Backend,
+  actor: { userId: string; role: MerchantRef['role'] },
+  merchantId: string,
+  approvalId: string,
+  decision: 'approve' | 'reject',
+): Promise<FlowResult<DecisionOutcome>> {
+  if (actor.role !== 'owner') return fail('Só o dono da loja pode aprovar ou recusar.');
 
   const current = await backend.approvals.get(approvalId, merchantId);
   if (!current) return fail('Aprovação não encontrada.');
-  const d = { approvalId, merchantId, userId: user.id };
+  const d = { approvalId, merchantId, userId: actor.userId };
 
   try {
     if (decision === 'reject') return ok({ approval: await backend.approvals.reject(d) });
